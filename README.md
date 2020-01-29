@@ -717,72 +717,72 @@ FROM #capture_waits_data
 	<summary>DDL Trigger to track schema changes</summary>
 	
 	```sql
-SET ANSI_NULLS ON
-GO
+	SET ANSI_NULLS ON
+	GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+	SET QUOTED_IDENTIFIER ON
+	GO
 
-CREATE TABLE [dbo].[DDL_Change_Log](
-	[EventDate] [datetime2](7) NOT NULL,
-	[EventType] [nvarchar](100) NULL,
-	[EventDDL] [nvarchar](max) NULL,
-	[EventXML] [xml] NULL,
-	[DatabaseName] [nvarchar](255) NULL,
-	[SchemaName] [nvarchar](255) NULL,
-	[ObjectName] [nvarchar](255) NULL,
-	[HostName] [varchar](64) NULL,
-	[IPAddress] [varchar](48) NULL,
-	[ProgramName] [nvarchar](255) NULL,
-	[LoginName] [nvarchar](255) NULL
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
+	CREATE TABLE [dbo].[DDL_Change_Log](
+		[EventDate] [datetime2](7) NOT NULL,
+		[EventType] [nvarchar](100) NULL,
+		[EventDDL] [nvarchar](max) NULL,
+		[EventXML] [xml] NULL,
+		[DatabaseName] [nvarchar](255) NULL,
+		[SchemaName] [nvarchar](255) NULL,
+		[ObjectName] [nvarchar](255) NULL,
+		[HostName] [varchar](64) NULL,
+		[IPAddress] [varchar](48) NULL,
+		[ProgramName] [nvarchar](255) NULL,
+		[LoginName] [nvarchar](255) NULL
+	) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+	GO
 
-ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
-GO
+	ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
+	GO
 
-CREATE TRIGGER [DDL_Change_Trigger]
-ON DATABASE
-FOR CREATE_PROCEDURE, ALTER_PROCEDURE, DROP_PROCEDURE, 
-	CREATE_TABLE, ALTER_TABLE, DROP_TABLE,
-	CREATE_INDEX, ALTER_INDEX, DROP_INDEX,
-	CREATE_FUNCTION, ALTER_FUNCTION, DROP_FUNCTION,
-	CREATE_VIEW, ALTER_VIEW, DROP_VIEW
-AS
-BEGIN
-	SET NOCOUNT ON;
+	CREATE TRIGGER [DDL_Change_Trigger]
+	ON DATABASE
+	FOR CREATE_PROCEDURE, ALTER_PROCEDURE, DROP_PROCEDURE, 
+		CREATE_TABLE, ALTER_TABLE, DROP_TABLE,
+		CREATE_INDEX, ALTER_INDEX, DROP_INDEX,
+		CREATE_FUNCTION, ALTER_FUNCTION, DROP_FUNCTION,
+		CREATE_VIEW, ALTER_VIEW, DROP_VIEW
+	AS
+	BEGIN
+		SET NOCOUNT ON;
 
-	DECLARE @EventData XML = EVENTDATA();
-	DECLARE @ip varchar(48) = CONVERT(varchar(48), CONNECTIONPROPERTY('client_net_address'));
- 
-	INSERT dbo.DDL_Change_Log
-	(
-		EventType,
-		EventDDL,
-		EventXML,
-		DatabaseName,
-		SchemaName,
-		ObjectName,
-		HostName,
-		IPAddress,
-		ProgramName,
-		LoginName
-	)
-	SELECT
-		@EventData.value('(/EVENT_INSTANCE/EventType)[1]',   'NVARCHAR(100)'), 
-		@EventData.value('(/EVENT_INSTANCE/TSQLCommand)[1]', 'NVARCHAR(MAX)'),
-		@EventData,
-		DB_NAME(),
-		@EventData.value('(/EVENT_INSTANCE/SchemaName)[1]',  'NVARCHAR(255)'), 
-		@EventData.value('(/EVENT_INSTANCE/ObjectName)[1]',  'NVARCHAR(255)'),
-		HOST_NAME(),
-		@ip,
-		PROGRAM_NAME(),
-		SUSER_SNAME();
-END
-GO
+		DECLARE @EventData XML = EVENTDATA();
+		DECLARE @ip varchar(48) = CONVERT(varchar(48), CONNECTIONPROPERTY('client_net_address'));
 
-ENABLE TRIGGER [DDL_Change_Trigger] ON DATABASE
-GO
+		INSERT dbo.DDL_Change_Log
+		(
+			EventType,
+			EventDDL,
+			EventXML,
+			DatabaseName,
+			SchemaName,
+			ObjectName,
+			HostName,
+			IPAddress,
+			ProgramName,
+			LoginName
+		)
+		SELECT
+			@EventData.value('(/EVENT_INSTANCE/EventType)[1]',   'NVARCHAR(100)'), 
+			@EventData.value('(/EVENT_INSTANCE/TSQLCommand)[1]', 'NVARCHAR(MAX)'),
+			@EventData,
+			DB_NAME(),
+			@EventData.value('(/EVENT_INSTANCE/SchemaName)[1]',  'NVARCHAR(255)'), 
+			@EventData.value('(/EVENT_INSTANCE/ObjectName)[1]',  'NVARCHAR(255)'),
+			HOST_NAME(),
+			@ip,
+			PROGRAM_NAME(),
+			SUSER_SNAME();
+	END
+	GO
+
+	ENABLE TRIGGER [DDL_Change_Trigger] ON DATABASE
+	GO
 	```
 </details>
