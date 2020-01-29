@@ -1,7 +1,7 @@
-# sql-server-cheatsheet
+# Microsoft SQL Server - Cheatsheet 
 Useful SQL Server scripts and snippets
 
-## Useful tools
+## Useful Tools
 
 * [Brent Ozar's First Responder Kit](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit)
 * [Adam Mechanic's sp_WhoIsActive](https://github.com/amachanic/sp_whoisactive/releases)
@@ -10,6 +10,19 @@ Useful SQL Server scripts and snippets
 * [Statistics Parser](http://statisticsparser.com/)
 * [Brent Ozar's Paste the Plan](https://www.brentozar.com/pastetheplan/)
 * [dbatools (Instance Migration)](https://dbatools.io/)
+* [SentryOne (Mostly paid)](https://www.sentryone.com/)
+* [RedGate (Mostly paid](https://www.red-gate.com)
+
+## Blogs & Resources
+* [SQL Server Central](https://www.sqlservercentral.com/)
+* [Brent Ozar's Blog](https://www.brentozar.com/blog/)
+* [Brent Ozar's YouTube](https://www.youtube.com/user/BrentOzar)
+* [Kendra Little's YouTube](https://www.youtube.com/channel/UCrJ8WLrVoKxL94mKv2akxTA/videos)
+* [SQLskills Resources](https://www.sqlskills.com/sql-server-resources/)
+* [StackOverflow Database Backups](https://www.brentozar.com/archive/2015/10/how-to-download-the-stack-overflow-database-via-bittorrent/)
+* [DBA StackExchange](https://dba.stackexchange.com/?tags=sql-server)
+* [RedGate's Simple Talk Blog](https://www.red-gate.com/simple-talk/)
+* [SentryOne Blog](https://www.sentryone.com/blog)
 
 
 ## Queries for all DBs
