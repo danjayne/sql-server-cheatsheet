@@ -708,23 +708,24 @@ FROM #capture_waits_data
 <details>
 	<summary>DDL Trigger to track schema changes</summary>
 	<p>
+
 ```sql
-CREATE TABLE [dbo].[DDL_Change_Log](
-	[EventDate] [datetime2](7) NOT NULL,
-	[EventType] [nvarchar](100) NULL,
-	[EventDDL] [nvarchar](max) NULL,
-	[EventXML] [xml] NULL,
-	[DatabaseName] [nvarchar](255) NULL,
-	[SchemaName] [nvarchar](255) NULL,
-	[ObjectName] [nvarchar](255) NULL,
-	[HostName] [varchar](64) NULL,
-	[IPAddress] [varchar](48) NULL,
-	[ProgramName] [nvarchar](255) NULL,
-	[LoginName] [nvarchar](255) NULL
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
-GO
+	CREATE TABLE [dbo].[DDL_Change_Log](
+		[EventDate] [datetime2](7) NOT NULL,
+		[EventType] [nvarchar](100) NULL,
+		[EventDDL] [nvarchar](max) NULL,
+		[EventXML] [xml] NULL,
+		[DatabaseName] [nvarchar](255) NULL,
+		[SchemaName] [nvarchar](255) NULL,
+		[ObjectName] [nvarchar](255) NULL,
+		[HostName] [varchar](64) NULL,
+		[IPAddress] [varchar](48) NULL,
+		[ProgramName] [nvarchar](255) NULL,
+		[LoginName] [nvarchar](255) NULL
+	) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+	GO
+	ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
+	GO
 ```
 		
 ```sql
