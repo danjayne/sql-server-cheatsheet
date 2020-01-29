@@ -683,4 +683,30 @@ OPTION (RECOMPILE);
  ```
 </details>
 
-
+<details>
+ <summary>Extended Events Slow rpc_completed - read from ring buffer</summary>
+ 
+ ```sql
+  SELECT targetdata = CAST(xet.target_data AS xml)
+  INTO #capture_waits_data
+FROM sys.dm_xe_database_session_targets AS xet
+JOIN sys.dm_xe_database_sessions AS xe
+ON (xe.address = xet.event_session_address)
+WHERE xe.name = 'QueryWaitTime_gt_1Second'
+AND xet.target_name = 'ring_buffer'
+  SELECT xed.event_data.value('(@timestamp)[1]', 'datetime2') AS [timestamp],
+  xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') AS cpu_time_ms,
+    floor(xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') / (1000000)) as seconds,
+  xed.event_data.value('(data[@name="logical_reads"]/value)[1]', 'int') AS logical_reads,
+  xed.event_data.value('(data[@name="row_count"]/value)[1]', 'int') AS row_count,
+  xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') AS wait_type_duration_ms,
+  floor(xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') / (1000000)) as seconds,
+  xed.event_data.value('(data[@name="result"]/text)[1]', 'varchar(max)') AS result,
+   xed.event_data.value('(data[@name="statement"]/value)[1]', 'varchar(max)') AS statement_text
+FROM #capture_waits_data
+  CROSS APPLY targetdata.nodes('//RingBufferTarget/event') AS xed (event_data)
+  ORDER BY wait_type_duration_ms DESC
+  DROP TABLE #capture_waits_data
+  GO
+ ```
+</details>
