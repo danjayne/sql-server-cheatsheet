@@ -248,163 +248,6 @@ EXECUTE dbo.DatabaseBackup
 </details>
 
 <details>
- <summary>Clear proc cache (Azure SQL)</summary>
- 
- ```sql
-ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE ;  
- ```
- 
-```sql
-ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE (0x0...);  
- ```
-</details>
-
-<details>
- <summary>Generate Index rename scripts for auto generated indexes (Azure SQL)</summary>
- 
- ```sql
-declare @SchemaName varchar(100)declare @TableName varchar(256)
-declare @IndexName varchar(256)
-declare @ColumnName varchar(100)
-declare @is_unique varchar(100)
-declare @IndexTypeDesc varchar(100)
-declare @FileGroupName varchar(100)
-declare @is_disabled varchar(100)
-declare @IndexOptions varchar(max)
-declare @IndexColumnId int
-declare @IsDescendingKey int 
-declare @IsIncludedColumn int
-declare @TSQLScripCreationIndex varchar(max)
-declare @TSQLScripDisableIndex varchar(max)
-declare @TSQLScriptRenameIndex varchar(max)
-declare @splitSQL varchar(max)
-
-declare CursorIndex cursor for
- select schema_name(t.schema_id) [schema_name], t.name, ix.name,
- case when ix.is_unique = 1 then 'UNIQUE ' else '' END 
- , ix.type_desc,
- case when ix.is_padded=1 then 'PAD_INDEX = ON, ' else 'PAD_INDEX = OFF, ' end
- + case when ix.allow_page_locks=1 then 'ALLOW_PAGE_LOCKS = ON, ' else 'ALLOW_PAGE_LOCKS = OFF, ' end
- + case when ix.allow_row_locks=1 then  'ALLOW_ROW_LOCKS = ON, ' else 'ALLOW_ROW_LOCKS = OFF, ' end
- + case when INDEXPROPERTY(t.object_id, ix.name, 'IsStatistics') = 1 then 'STATISTICS_NORECOMPUTE = ON, ' else 'STATISTICS_NORECOMPUTE = OFF, ' end
- + case when ix.ignore_dup_key=1 then 'IGNORE_DUP_KEY = ON, ' else 'IGNORE_DUP_KEY = OFF, ' end
- + 'SORT_IN_TEMPDB = OFF, FILLFACTOR =' + CAST(ix.fill_factor AS VARCHAR(3)) AS IndexOptions
- , ix.is_disabled , FILEGROUP_NAME(ix.data_space_id) FileGroupName
- from sys.tables t 
- inner join sys.indexes ix on t.object_id=ix.object_id
- where ix.type>0 and ix.is_primary_key=0 and ix.is_unique_constraint=0 --and schema_name(tb.schema_id)= @SchemaName and tb.name=@TableName
- and t.is_ms_shipped=0 and t.name<>'sysdiagrams' and ix.name LIKE 'nci_wi%'
- order by schema_name(t.schema_id), t.name, ix.name
-
-open CursorIndex
-fetch next from CursorIndex into  @SchemaName, @TableName, @IndexName, @is_unique, @IndexTypeDesc, @IndexOptions,@is_disabled, @FileGroupName
-
-while (@@fetch_status=0)
-begin
- declare @IndexColumns varchar(max)
- declare @IncludedColumns varchar(max)
- 
- set @IndexColumns=''
- set @IncludedColumns=''
- 
- declare CursorIndexColumn cursor for 
-  select col.name, ixc.is_descending_key, ixc.is_included_column
-  from sys.tables tb 
-  inner join sys.indexes ix on tb.object_id=ix.object_id
-  inner join sys.index_columns ixc on ix.object_id=ixc.object_id and ix.index_id= ixc.index_id
-  inner join sys.columns col on ixc.object_id =col.object_id  and ixc.column_id=col.column_id
-  where ix.type>0 and (ix.is_primary_key=0 or ix.is_unique_constraint=0)
-  and schema_name(tb.schema_id)=@SchemaName and tb.name=@TableName and ix.name=@IndexName
-  order by ixc.index_column_id
- 
- open CursorIndexColumn 
- fetch next from CursorIndexColumn into  @ColumnName, @IsDescendingKey, @IsIncludedColumn
- 
- while (@@fetch_status=0)
- begin
-  if @IsIncludedColumn=0 
-   --set @IndexColumns=@IndexColumns + @ColumnName  + case when @IsDescendingKey=1  then ' DESC, ' else  ' ASC, ' end
-   set @IndexColumns=@IndexColumns + @ColumnName  + '_'
-  else 
-	set @IncludedColumns=@IncludedColumns  + @ColumnName  +'_'
-   --set @IncludedColumns=@IncludedColumns  + @ColumnName  +', ' 
-
-  fetch next from CursorIndexColumn into @ColumnName, @IsDescendingKey, @IsIncludedColumn
- end
-
- close CursorIndexColumn
- deallocate CursorIndexColumn
-
- set @IndexColumns = substring(@IndexColumns, 1, len(@IndexColumns)-1)
- set @IncludedColumns = case when len(@IncludedColumns) >0 then substring(@IncludedColumns, 1, len(@IncludedColumns)-1) else '' end
-  --print @IndexColumns
-  --print @IncludedColumns
-
- set @TSQLScripCreationIndex =''
- set @TSQLScripDisableIndex =''
- set @TSQLScriptRenameIndex =''
- set @splitSQL =''
-
- set @TSQLScripCreationIndex='CREATE '+ @is_unique  +@IndexTypeDesc + ' INDEX ' +QUOTENAME(@IndexName)+' ON ' + QUOTENAME(@SchemaName) +'.'+ QUOTENAME(@TableName)+ '('+@IndexColumns+') '+ 
-  --case when len(@IncludedColumns)>0 then CHAR(13) +'INCLUDE (' + @IncludedColumns+ ')' else '' end 
-  case when len(@IncludedColumns)>0 then 'INCLUDE (' + @IncludedColumns+ ')' else '' end 
-  --+ CHAR(13) + CHAR(10)+'WITH (' + @IndexOptions+ ') ON ' + QUOTENAME(@FileGroupName) 
-  + ';'  
-
-
-  --SET @splitSQL = (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_'))
-  --SELECT @splitSQL
-
-  IF (@IndexName <> 'IX_' + @IndexColumns 
-  + case when len(@IncludedColumns)>0 then 
-		case when (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_')) < 5 then 
-			'_Inc_' + @IncludedColumns 
-		else 
-			'_Inc_Many'
-		end
-	else '' end)
-BEGIN
-
-  
-  SET @TSQLScriptRenameIndex = 
-	  'IF  EXISTS (SELECT * FROM sys.indexes WHERE name=''' + @IndexName + ''' AND object_id = OBJECT_ID(''' + @SchemaName + '.' + @TableName + ''')) ' + CHAR(13) + CHAR(10)
-	  +'BEGIN' + CHAR(13) + CHAR(10)
-	  +'EXEC sp_rename N''' + @SchemaName + '.' + @TableName + '.' + + @IndexName + ''', N''IX_' + @IndexColumns 
-	  + case when len(@IncludedColumns)>0 then 
-			case when (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_')) < 5 then
-				'_Inc_' + @IncludedColumns 
-			else 
-				'_Inc_Many'
-			end
-		else '' end
-	  + ''', N''INDEX''' 
-	  + ';'  + CHAR(13) + CHAR(10) + 'END'
-	  + CHAR(13) + CHAR(10) + 'GO'
-	  + CHAR(13) + CHAR(10)
-  END
-  ELSE
-BEGIN
-	
-  SET @TSQLScriptRenameIndex = '-- Skipped ' + @SchemaName + '.' + @TableName + '.' + + @IndexName
-END
-
-
- if @is_disabled=1 
-  set  @TSQLScripDisableIndex=  CHAR(13) +'ALTER INDEX ' +QUOTENAME(@IndexName) + ' ON ' + QUOTENAME(@SchemaName) +'.'+ QUOTENAME(@TableName) + ' DISABLE;' + CHAR(13) + CHAR(10) 
-
---print @TSQLScripCreationIndex
- print @TSQLScriptRenameIndex
- --print @TSQLScripDisableIndex
-
- fetch next from CursorIndex into  @SchemaName, @TableName, @IndexName, @is_unique, @IndexTypeDesc, @IndexOptions,@is_disabled, @FileGroupName
-
-end
-close CursorIndex
-deallocate CursorIndex
- ```
-</details>
-
-<details>
  <summary>Get current Isolation Level</summary>
  
  ```sql
@@ -608,76 +451,6 @@ GO
 </details>
 
 <details>
- <summary>Tell me where it hurts (Azure SQL)</summary>
- 
- ```sql
--- Isolate top waits for this database since last restart or failover (Query 24) (Top DB Waits)
-WITH [Waits]
-AS (SELECT wait_type, wait_time_ms/ 1000.0 AS [WaitS],
-          (wait_time_ms - signal_wait_time_ms) / 1000.0 AS [ResourceS],
-           signal_wait_time_ms / 1000.0 AS [SignalS],
-           waiting_tasks_count AS [WaitCount],
-           100.0 *  wait_time_ms / SUM (wait_time_ms) OVER() AS [Percentage],
-           ROW_NUMBER() OVER(ORDER BY wait_time_ms DESC) AS [RowNum]
-    FROM sys.dm_db_wait_stats WITH (NOLOCK)
-    WHERE [wait_type] NOT IN (
-        N'BROKER_EVENTHANDLER', N'BROKER_RECEIVE_WAITFOR', N'BROKER_TASK_STOP',
-        N'BROKER_TO_FLUSH', N'BROKER_TRANSMITTER', N'CHECKPOINT_QUEUE',
-        N'CHKPT', N'CLR_AUTO_EVENT', N'CLR_MANUAL_EVENT', N'CLR_SEMAPHORE',
-        N'DBMIRROR_DBM_EVENT', N'DBMIRROR_EVENTS_QUEUE', N'DBMIRROR_WORKER_QUEUE',
-        N'DBMIRRORING_CMD', N'DIRTY_PAGE_POLL', N'DISPATCHER_QUEUE_SEMAPHORE',
-        N'EXECSYNC', N'FSAGENT', N'FT_IFTS_SCHEDULER_IDLE_WAIT', N'FT_IFTSHC_MUTEX',
-        N'HADR_CLUSAPI_CALL', N'HADR_FILESTREAM_IOMGR_IOCOMPLETION', N'HADR_LOGCAPTURE_WAIT',
-        N'HADR_NOTIFICATION_DEQUEUE', N'HADR_TIMER_TASK', N'HADR_WORK_QUEUE',
-        N'KSOURCE_WAKEUP', N'LAZYWRITER_SLEEP', N'LOGMGR_QUEUE',
-        N'MEMORY_ALLOCATION_EXT', N'ONDEMAND_TASK_QUEUE',
-        N'PREEMPTIVE_HADR_LEASE_MECHANISM', N'PREEMPTIVE_SP_SERVER_DIAGNOSTICS',
-        N'PREEMPTIVE_ODBCOPS',
-        N'PREEMPTIVE_OS_LIBRARYOPS', N'PREEMPTIVE_OS_COMOPS', N'PREEMPTIVE_OS_CRYPTOPS',
-        N'PREEMPTIVE_OS_PIPEOPS', N'PREEMPTIVE_OS_AUTHENTICATIONOPS',
-        N'PREEMPTIVE_OS_GENERICOPS', N'PREEMPTIVE_OS_VERIFYTRUST',
-        N'PREEMPTIVE_OS_FILEOPS', N'PREEMPTIVE_OS_DEVICEOPS', N'PREEMPTIVE_OS_QUERYREGISTRY',
-        N'PREEMPTIVE_OS_WRITEFILE',
-        N'PREEMPTIVE_XE_CALLBACKEXECUTE', N'PREEMPTIVE_XE_DISPATCHER',
-        N'PREEMPTIVE_XE_GETTARGETSTATE', N'PREEMPTIVE_XE_SESSIONCOMMIT',
-        N'PREEMPTIVE_XE_TARGETINIT', N'PREEMPTIVE_XE_TARGETFINALIZE',
-        N'PREEMPTIVE_XHTTP',
-        N'PWAIT_ALL_COMPONENTS_INITIALIZED', N'PWAIT_DIRECTLOGCONSUMER_GETNEXT',
-        N'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP',
-        N'QDS_ASYNC_QUEUE',
-        N'QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP', N'REQUEST_FOR_DEADLOCK_SEARCH',
-        N'RESOURCE_GOVERNOR_IDLE',
-        N'RESOURCE_QUEUE', N'SERVER_IDLE_CHECK', N'SLEEP_BPOOL_FLUSH', N'SLEEP_DBSTARTUP',
-        N'SLEEP_DCOMSTARTUP', N'SLEEP_MASTERDBREADY', N'SLEEP_MASTERMDREADY',
-        N'SLEEP_MASTERUPGRADED', N'SLEEP_MSDBSTARTUP', N'SLEEP_SYSTEMTASK', N'SLEEP_TASK',
-        N'SLEEP_TEMPDBSTARTUP', N'SNI_HTTP_ACCEPT', N'SP_SERVER_DIAGNOSTICS_SLEEP',
-        N'SQLTRACE_BUFFER_FLUSH', N'SQLTRACE_INCREMENTAL_FLUSH_SLEEP', N'SQLTRACE_WAIT_ENTRIES',
-        N'WAIT_FOR_RESULTS', N'WAITFOR', N'WAITFOR_TASKSHUTDOWN', N'WAIT_XTP_HOST_WAIT',
-        N'WAIT_XTP_OFFLINE_CKPT_NEW_LOG', N'WAIT_XTP_CKPT_CLOSE', N'WAIT_XTP_RECOVERY',
-        N'XE_BUFFERMGR_ALLPROCESSED_EVENT', N'XE_DISPATCHER_JOIN',
-        N'XE_DISPATCHER_WAIT', N'XE_LIVE_TARGET_TVF', N'XE_TIMER_EVENT')
-    AND waiting_tasks_count > 0)
-SELECT
-    MAX (W1.wait_type) AS [WaitType],
-    CAST (MAX (W1.Percentage) AS DECIMAL (5,2)) AS [Wait Percentage],
-    CAST ((MAX (W1.WaitS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgWait_Sec],
-    CAST ((MAX (W1.ResourceS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgRes_Sec],
-    CAST ((MAX (W1.SignalS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgSig_Sec],
-    CAST (MAX (W1.WaitS) AS DECIMAL (16,2)) AS [Total_Wait_Sec],
-    CAST (MAX (W1.ResourceS) AS DECIMAL (16,2)) AS [Resource_Sec],
-    CAST (MAX (W1.SignalS) AS DECIMAL (16,2)) AS [Signal_Sec],
-    MAX (W1.WaitCount) AS [Wait Count]  
-FROM Waits AS W1
-INNER JOIN Waits AS W2
-ON W2.RowNum <= W1.RowNum
-GROUP BY W1.RowNum
-HAVING SUM (W2.Percentage) - MAX (W1.Percentage) < 99 -- percentage threshold
-OPTION (RECOMPILE);
-------
- ```
-</details>
-
-<details>
 	<summary>DDL Trigger to track schema changes</summary>
 	<p>
 
@@ -781,7 +554,7 @@ GO
 ## Extended Events
 
 <details>
- <summary>Extended Events Slow rpc_completed - read from ring buffer</summary>
+ <summary>Any rpc_completed event greater than 1 second - parsed from ring buffer</summary>
  
  ```sql
   SELECT targetdata = CAST(xet.target_data AS xml)
@@ -809,7 +582,7 @@ FROM #capture_waits_data
 </details>
 
 <details>
- <summary>Extended Events Slow rpc_completed - read from ring buffer</summary>
+ <summary>Create session - SP taking greater than 1 second</summary>
  
  ```sql
 CREATE EVENT SESSION [<SPNAME>_gt_1secs] ON DATABASE 
@@ -819,5 +592,234 @@ ADD EVENT sqlserver.rpc_completed(
 ADD TARGET package0.ring_buffer
 WITH (MAX_MEMORY=4096 KB,EVENT_RETENTION_MODE=ALLOW_SINGLE_EVENT_LOSS,MAX_DISPATCH_LATENCY=30 SECONDS,MAX_EVENT_SIZE=0 KB,MEMORY_PARTITION_MODE=NONE,TRACK_CAUSALITY=OFF,STARTUP_STATE=OFF)
 GO
+ ```
+</details>
+
+## Azure SQL Single Database Only
+
+<details>
+ <summary>Tell me where it hurts (Azure SQL)</summary>
+ 
+ ```sql
+-- Isolate top waits for this database since last restart or failover (Query 24) (Top DB Waits)
+WITH [Waits]
+AS (SELECT wait_type, wait_time_ms/ 1000.0 AS [WaitS],
+          (wait_time_ms - signal_wait_time_ms) / 1000.0 AS [ResourceS],
+           signal_wait_time_ms / 1000.0 AS [SignalS],
+           waiting_tasks_count AS [WaitCount],
+           100.0 *  wait_time_ms / SUM (wait_time_ms) OVER() AS [Percentage],
+           ROW_NUMBER() OVER(ORDER BY wait_time_ms DESC) AS [RowNum]
+    FROM sys.dm_db_wait_stats WITH (NOLOCK)
+    WHERE [wait_type] NOT IN (
+        N'BROKER_EVENTHANDLER', N'BROKER_RECEIVE_WAITFOR', N'BROKER_TASK_STOP',
+        N'BROKER_TO_FLUSH', N'BROKER_TRANSMITTER', N'CHECKPOINT_QUEUE',
+        N'CHKPT', N'CLR_AUTO_EVENT', N'CLR_MANUAL_EVENT', N'CLR_SEMAPHORE',
+        N'DBMIRROR_DBM_EVENT', N'DBMIRROR_EVENTS_QUEUE', N'DBMIRROR_WORKER_QUEUE',
+        N'DBMIRRORING_CMD', N'DIRTY_PAGE_POLL', N'DISPATCHER_QUEUE_SEMAPHORE',
+        N'EXECSYNC', N'FSAGENT', N'FT_IFTS_SCHEDULER_IDLE_WAIT', N'FT_IFTSHC_MUTEX',
+        N'HADR_CLUSAPI_CALL', N'HADR_FILESTREAM_IOMGR_IOCOMPLETION', N'HADR_LOGCAPTURE_WAIT',
+        N'HADR_NOTIFICATION_DEQUEUE', N'HADR_TIMER_TASK', N'HADR_WORK_QUEUE',
+        N'KSOURCE_WAKEUP', N'LAZYWRITER_SLEEP', N'LOGMGR_QUEUE',
+        N'MEMORY_ALLOCATION_EXT', N'ONDEMAND_TASK_QUEUE',
+        N'PREEMPTIVE_HADR_LEASE_MECHANISM', N'PREEMPTIVE_SP_SERVER_DIAGNOSTICS',
+        N'PREEMPTIVE_ODBCOPS',
+        N'PREEMPTIVE_OS_LIBRARYOPS', N'PREEMPTIVE_OS_COMOPS', N'PREEMPTIVE_OS_CRYPTOPS',
+        N'PREEMPTIVE_OS_PIPEOPS', N'PREEMPTIVE_OS_AUTHENTICATIONOPS',
+        N'PREEMPTIVE_OS_GENERICOPS', N'PREEMPTIVE_OS_VERIFYTRUST',
+        N'PREEMPTIVE_OS_FILEOPS', N'PREEMPTIVE_OS_DEVICEOPS', N'PREEMPTIVE_OS_QUERYREGISTRY',
+        N'PREEMPTIVE_OS_WRITEFILE',
+        N'PREEMPTIVE_XE_CALLBACKEXECUTE', N'PREEMPTIVE_XE_DISPATCHER',
+        N'PREEMPTIVE_XE_GETTARGETSTATE', N'PREEMPTIVE_XE_SESSIONCOMMIT',
+        N'PREEMPTIVE_XE_TARGETINIT', N'PREEMPTIVE_XE_TARGETFINALIZE',
+        N'PREEMPTIVE_XHTTP',
+        N'PWAIT_ALL_COMPONENTS_INITIALIZED', N'PWAIT_DIRECTLOGCONSUMER_GETNEXT',
+        N'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP',
+        N'QDS_ASYNC_QUEUE',
+        N'QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP', N'REQUEST_FOR_DEADLOCK_SEARCH',
+        N'RESOURCE_GOVERNOR_IDLE',
+        N'RESOURCE_QUEUE', N'SERVER_IDLE_CHECK', N'SLEEP_BPOOL_FLUSH', N'SLEEP_DBSTARTUP',
+        N'SLEEP_DCOMSTARTUP', N'SLEEP_MASTERDBREADY', N'SLEEP_MASTERMDREADY',
+        N'SLEEP_MASTERUPGRADED', N'SLEEP_MSDBSTARTUP', N'SLEEP_SYSTEMTASK', N'SLEEP_TASK',
+        N'SLEEP_TEMPDBSTARTUP', N'SNI_HTTP_ACCEPT', N'SP_SERVER_DIAGNOSTICS_SLEEP',
+        N'SQLTRACE_BUFFER_FLUSH', N'SQLTRACE_INCREMENTAL_FLUSH_SLEEP', N'SQLTRACE_WAIT_ENTRIES',
+        N'WAIT_FOR_RESULTS', N'WAITFOR', N'WAITFOR_TASKSHUTDOWN', N'WAIT_XTP_HOST_WAIT',
+        N'WAIT_XTP_OFFLINE_CKPT_NEW_LOG', N'WAIT_XTP_CKPT_CLOSE', N'WAIT_XTP_RECOVERY',
+        N'XE_BUFFERMGR_ALLPROCESSED_EVENT', N'XE_DISPATCHER_JOIN',
+        N'XE_DISPATCHER_WAIT', N'XE_LIVE_TARGET_TVF', N'XE_TIMER_EVENT')
+    AND waiting_tasks_count > 0)
+SELECT
+    MAX (W1.wait_type) AS [WaitType],
+    CAST (MAX (W1.Percentage) AS DECIMAL (5,2)) AS [Wait Percentage],
+    CAST ((MAX (W1.WaitS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgWait_Sec],
+    CAST ((MAX (W1.ResourceS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgRes_Sec],
+    CAST ((MAX (W1.SignalS) / MAX (W1.WaitCount)) AS DECIMAL (16,4)) AS [AvgSig_Sec],
+    CAST (MAX (W1.WaitS) AS DECIMAL (16,2)) AS [Total_Wait_Sec],
+    CAST (MAX (W1.ResourceS) AS DECIMAL (16,2)) AS [Resource_Sec],
+    CAST (MAX (W1.SignalS) AS DECIMAL (16,2)) AS [Signal_Sec],
+    MAX (W1.WaitCount) AS [Wait Count]  
+FROM Waits AS W1
+INNER JOIN Waits AS W2
+ON W2.RowNum <= W1.RowNum
+GROUP BY W1.RowNum
+HAVING SUM (W2.Percentage) - MAX (W1.Percentage) < 99 -- percentage threshold
+OPTION (RECOMPILE);
+------
+ ```
+</details>
+
+<details>
+ <summary>Clear proc cache (Azure SQL)</summary>
+ 
+ ```sql
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE ;  
+ ```
+ 
+```sql
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE (0x0...);  
+ ```
+</details>
+
+<details>
+ <summary>Generate Index rename scripts for auto generated indexes (Azure SQL)</summary>
+ 
+ ```sql
+declare @SchemaName varchar(100)declare @TableName varchar(256)
+declare @IndexName varchar(256)
+declare @ColumnName varchar(100)
+declare @is_unique varchar(100)
+declare @IndexTypeDesc varchar(100)
+declare @FileGroupName varchar(100)
+declare @is_disabled varchar(100)
+declare @IndexOptions varchar(max)
+declare @IndexColumnId int
+declare @IsDescendingKey int 
+declare @IsIncludedColumn int
+declare @TSQLScripCreationIndex varchar(max)
+declare @TSQLScripDisableIndex varchar(max)
+declare @TSQLScriptRenameIndex varchar(max)
+declare @splitSQL varchar(max)
+
+declare CursorIndex cursor for
+ select schema_name(t.schema_id) [schema_name], t.name, ix.name,
+ case when ix.is_unique = 1 then 'UNIQUE ' else '' END 
+ , ix.type_desc,
+ case when ix.is_padded=1 then 'PAD_INDEX = ON, ' else 'PAD_INDEX = OFF, ' end
+ + case when ix.allow_page_locks=1 then 'ALLOW_PAGE_LOCKS = ON, ' else 'ALLOW_PAGE_LOCKS = OFF, ' end
+ + case when ix.allow_row_locks=1 then  'ALLOW_ROW_LOCKS = ON, ' else 'ALLOW_ROW_LOCKS = OFF, ' end
+ + case when INDEXPROPERTY(t.object_id, ix.name, 'IsStatistics') = 1 then 'STATISTICS_NORECOMPUTE = ON, ' else 'STATISTICS_NORECOMPUTE = OFF, ' end
+ + case when ix.ignore_dup_key=1 then 'IGNORE_DUP_KEY = ON, ' else 'IGNORE_DUP_KEY = OFF, ' end
+ + 'SORT_IN_TEMPDB = OFF, FILLFACTOR =' + CAST(ix.fill_factor AS VARCHAR(3)) AS IndexOptions
+ , ix.is_disabled , FILEGROUP_NAME(ix.data_space_id) FileGroupName
+ from sys.tables t 
+ inner join sys.indexes ix on t.object_id=ix.object_id
+ where ix.type>0 and ix.is_primary_key=0 and ix.is_unique_constraint=0 --and schema_name(tb.schema_id)= @SchemaName and tb.name=@TableName
+ and t.is_ms_shipped=0 and t.name<>'sysdiagrams' and ix.name LIKE 'nci_wi%'
+ order by schema_name(t.schema_id), t.name, ix.name
+
+open CursorIndex
+fetch next from CursorIndex into  @SchemaName, @TableName, @IndexName, @is_unique, @IndexTypeDesc, @IndexOptions,@is_disabled, @FileGroupName
+
+while (@@fetch_status=0)
+begin
+ declare @IndexColumns varchar(max)
+ declare @IncludedColumns varchar(max)
+ 
+ set @IndexColumns=''
+ set @IncludedColumns=''
+ 
+ declare CursorIndexColumn cursor for 
+  select col.name, ixc.is_descending_key, ixc.is_included_column
+  from sys.tables tb 
+  inner join sys.indexes ix on tb.object_id=ix.object_id
+  inner join sys.index_columns ixc on ix.object_id=ixc.object_id and ix.index_id= ixc.index_id
+  inner join sys.columns col on ixc.object_id =col.object_id  and ixc.column_id=col.column_id
+  where ix.type>0 and (ix.is_primary_key=0 or ix.is_unique_constraint=0)
+  and schema_name(tb.schema_id)=@SchemaName and tb.name=@TableName and ix.name=@IndexName
+  order by ixc.index_column_id
+ 
+ open CursorIndexColumn 
+ fetch next from CursorIndexColumn into  @ColumnName, @IsDescendingKey, @IsIncludedColumn
+ 
+ while (@@fetch_status=0)
+ begin
+  if @IsIncludedColumn=0 
+   --set @IndexColumns=@IndexColumns + @ColumnName  + case when @IsDescendingKey=1  then ' DESC, ' else  ' ASC, ' end
+   set @IndexColumns=@IndexColumns + @ColumnName  + '_'
+  else 
+	set @IncludedColumns=@IncludedColumns  + @ColumnName  +'_'
+   --set @IncludedColumns=@IncludedColumns  + @ColumnName  +', ' 
+
+  fetch next from CursorIndexColumn into @ColumnName, @IsDescendingKey, @IsIncludedColumn
+ end
+
+ close CursorIndexColumn
+ deallocate CursorIndexColumn
+
+ set @IndexColumns = substring(@IndexColumns, 1, len(@IndexColumns)-1)
+ set @IncludedColumns = case when len(@IncludedColumns) >0 then substring(@IncludedColumns, 1, len(@IncludedColumns)-1) else '' end
+  --print @IndexColumns
+  --print @IncludedColumns
+
+ set @TSQLScripCreationIndex =''
+ set @TSQLScripDisableIndex =''
+ set @TSQLScriptRenameIndex =''
+ set @splitSQL =''
+
+ set @TSQLScripCreationIndex='CREATE '+ @is_unique  +@IndexTypeDesc + ' INDEX ' +QUOTENAME(@IndexName)+' ON ' + QUOTENAME(@SchemaName) +'.'+ QUOTENAME(@TableName)+ '('+@IndexColumns+') '+ 
+  --case when len(@IncludedColumns)>0 then CHAR(13) +'INCLUDE (' + @IncludedColumns+ ')' else '' end 
+  case when len(@IncludedColumns)>0 then 'INCLUDE (' + @IncludedColumns+ ')' else '' end 
+  --+ CHAR(13) + CHAR(10)+'WITH (' + @IndexOptions+ ') ON ' + QUOTENAME(@FileGroupName) 
+  + ';'  
+
+
+  --SET @splitSQL = (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_'))
+  --SELECT @splitSQL
+
+  IF (@IndexName <> 'IX_' + @IndexColumns 
+  + case when len(@IncludedColumns)>0 then 
+		case when (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_')) < 5 then 
+			'_Inc_' + @IncludedColumns 
+		else 
+			'_Inc_Many'
+		end
+	else '' end)
+BEGIN
+
+  
+  SET @TSQLScriptRenameIndex = 
+	  'IF  EXISTS (SELECT * FROM sys.indexes WHERE name=''' + @IndexName + ''' AND object_id = OBJECT_ID(''' + @SchemaName + '.' + @TableName + ''')) ' + CHAR(13) + CHAR(10)
+	  +'BEGIN' + CHAR(13) + CHAR(10)
+	  +'EXEC sp_rename N''' + @SchemaName + '.' + @TableName + '.' + + @IndexName + ''', N''IX_' + @IndexColumns 
+	  + case when len(@IncludedColumns)>0 then 
+			case when (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_')) < 5 then
+				'_Inc_' + @IncludedColumns 
+			else 
+				'_Inc_Many'
+			end
+		else '' end
+	  + ''', N''INDEX''' 
+	  + ';'  + CHAR(13) + CHAR(10) + 'END'
+	  + CHAR(13) + CHAR(10) + 'GO'
+	  + CHAR(13) + CHAR(10)
+  END
+  ELSE
+BEGIN
+	
+  SET @TSQLScriptRenameIndex = '-- Skipped ' + @SchemaName + '.' + @TableName + '.' + + @IndexName
+END
+
+
+ if @is_disabled=1 
+  set  @TSQLScripDisableIndex=  CHAR(13) +'ALTER INDEX ' +QUOTENAME(@IndexName) + ' ON ' + QUOTENAME(@SchemaName) +'.'+ QUOTENAME(@TableName) + ' DISABLE;' + CHAR(13) + CHAR(10) 
+
+--print @TSQLScripCreationIndex
+ print @TSQLScriptRenameIndex
+ --print @TSQLScripDisableIndex
+
+ fetch next from CursorIndex into  @SchemaName, @TableName, @IndexName, @is_unique, @IndexTypeDesc, @IndexOptions,@is_disabled, @FileGroupName
+
+end
+close CursorIndex
+deallocate CursorIndex
  ```
 </details>
