@@ -29,6 +29,7 @@ Useful SQL Server scripts and snippets
 * [DBA StackExchange](https://dba.stackexchange.com/?tags=sql-server)
 * [RedGate's Simple Talk Blog](https://www.red-gate.com/simple-talk/)
 * [SentryOne Blog](https://www.sentryone.com/blog)
+* [Useful T-SQL queries and scripts](https://www.sqlservercentral.com/blogs/useful-t-sql-queries-and-scripts-to-work-in-sql-server)
 * [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
 ## Snippets
