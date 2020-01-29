@@ -31,6 +31,21 @@ Useful SQL Server scripts and snippets
 * [SentryOne Blog](https://www.sentryone.com/blog)
 * [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
+## Snippets
+<details>
+ <summary>SET STATISTICS</summary>
+ 
+ ```sql
+SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+-- Query
+SET STATISTICS IO OFF;
+SET STATISTICS TIME OFF;
+ ```
+</details>
+
+
+
 ## Database specific queries
 
 <details>
