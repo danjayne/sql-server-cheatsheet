@@ -798,4 +798,8 @@ AS
 )
 GO
  ```
+ 
+ ```sql
+ SELECT * FROM [dbo].[PlanCache] 
+ ```
 </details>
