@@ -130,157 +130,11 @@ SET STATISTICS IO, TIME OFF;
  ```
 </details>
 
-## Server specific queries
-
-<details>
- <summary>DBCC SQLPERF</summary>
- 
- ```sql
- DBCC SQLPERF (LOGSPACE);
- ```
- 
- ```sql
-DBCC SQLPERF("sys.dm_os_latch_stats" , CLEAR);
-DBCC SQLPERF("sys.dm_os_wait_stats" , CLEAR);
-GO
- ```
-</details>
-
 <details>
  <summary>DBCC SHOW_STATISTICS</summary>
  
  ```sql
 DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
- ```
-</details>
-
-<details>
- <summary>Total disk usage for server</summary>
- 
- ```sql
- SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
- FROM master.sys.master_files
- ```
-</details>
-
-<details>
- <summary>Ola's IndexOptimize Script</summary>
- 
- ```sql
-EXECUTE dbo.IndexOptimize
-@Databases = 'USER_DATABASES',
-@FragmentationLow = NULL,
-@FragmentationMedium = 'INDEX_REORGANIZE,INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
-@FragmentationHigh = 'INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
-@FragmentationLevel1 = 5,
-@FragmentationLevel2 = 30,
-@UpdateStatistics = 'ALL',
-@OnlyModifiedStatistics = 'Y'
- ```
- 
- ```sql
-EXECUTE dbo.IndexOptimize
-@Databases = 'USER_DATABASES',
-@FragmentationLow = NULL,
-@FragmentationMedium = NULL,
-@FragmentationHigh = NULL,
-@UpdateStatistics = 'ALL'
- ```
-</details>
-
-<details>
- <summary>Ola's DatabaseIntegrityCheck Script</summary>
- 
- ```sql
-EXECUTE dbo.DatabaseIntegrityCheck
-@Databases = 'USER_DATABASES',
-@CheckCommands = 'CHECKDB'
- ```
-</details>
-
-<details>
- <summary>Ola's DatabaseBackup Script</summary>
- 
-```sql
-EXECUTE dbo.DatabaseBackup
-@Databases = 'USER_DATABASES',
-@Directory = 'C:\Backup',
-@MirrorDirectory = 'D:\Backup',
-@BackupType = 'FULL',
-@Compress = 'Y',
-@Verify = 'Y',
-@CleanupTime = 24,
-@MirrorCleanupTime = 48	
-```
-
-```sql
-EXECUTE dbo.DatabaseBackup
-@Databases = 'SYSTEM_DATABASES',
-@Directory = 'C:\Backup',
-@BackupType = 'FULL',
-@Verify = 'Y',
-@Compress = 'Y',
-@CheckSum = 'Y',
-@CleanupTime = 24
-```
-
-```sql
-EXECUTE dbo.DatabaseBackup
-@Databases = 'USER_DATABASES',
-@Directory = 'C:\Backup',
-@BackupType = 'LOG',
-@Verify = 'Y',
-@Compress = 'Y',
-@CheckSum = 'Y',
-@CleanupTime = 1
-```
-
-```sql
-EXECUTE dbo.DatabaseBackup
-@Databases = 'USER_DATABASES',
-@Directory = 'C:\Backup',
-@BackupType = 'DIFF',
-@Verify = 'Y',
-@Compress = 'Y',
-@CheckSum = 'Y',
-@CleanupTime = 6
-```
-</details>
-
-<details>
- <summary>Get current Isolation Level</summary>
- 
- ```sql
-SELECT CASE transaction_isolation_level 
-WHEN 0 THEN 'Unspecified' 
-WHEN 1 THEN 'ReadUncommitted' 
-WHEN 2 THEN 'ReadCommitted' 
-WHEN 3 THEN 'Repeatable' 
-WHEN 4 THEN 'Serializable' 
-WHEN 5 THEN 'Snapshot' END AS TRANSACTION_ISOLATION_LEVEL 
-FROM sys.dm_exec_sessions 
-where session_id = @@SPID
- ```
-</details>
-
-<details>
- <summary>Kill all connections but mine</summary>
- 
- ```sql
-DECLARE @kill varchar(8000) = '';
-
-SELECT @kill = @kill + 'KILL ' + CONVERT(varchar(5), c.session_id) + ';'
-
-FROM sys.dm_exec_connections AS c
-JOIN sys.dm_exec_sessions AS s
-    ON c.session_id = s.session_id
-WHERE c.session_id <> @@SPID
---WHERE status = 'sleeping'
-ORDER BY c.connect_time ASC
-
-PRINT @kill
-
-EXEC(@kill)
  ```
 </details>
 
@@ -549,6 +403,152 @@ GO
  WHERE objtype = 'Proc'
  ORDER BY usecounts
  ```
+</details>
+
+<details>
+ <summary>Get current Isolation Level</summary>
+ 
+ ```sql
+SELECT CASE transaction_isolation_level 
+WHEN 0 THEN 'Unspecified' 
+WHEN 1 THEN 'ReadUncommitted' 
+WHEN 2 THEN 'ReadCommitted' 
+WHEN 3 THEN 'Repeatable' 
+WHEN 4 THEN 'Serializable' 
+WHEN 5 THEN 'Snapshot' END AS TRANSACTION_ISOLATION_LEVEL 
+FROM sys.dm_exec_sessions 
+where session_id = @@SPID
+ ```
+</details>
+
+<details>
+ <summary>Kill all connections but mine</summary>
+ 
+ ```sql
+DECLARE @kill varchar(8000) = '';
+
+SELECT @kill = @kill + 'KILL ' + CONVERT(varchar(5), c.session_id) + ';'
+
+FROM sys.dm_exec_connections AS c
+JOIN sys.dm_exec_sessions AS s
+    ON c.session_id = s.session_id
+WHERE c.session_id <> @@SPID
+--WHERE status = 'sleeping'
+ORDER BY c.connect_time ASC
+
+PRINT @kill
+
+EXEC(@kill)
+ ```
+</details>
+
+## Server specific queries
+
+<details>
+ <summary>DBCC SQLPERF</summary>
+ 
+ ```sql
+ DBCC SQLPERF (LOGSPACE);
+ ```
+ 
+ ```sql
+DBCC SQLPERF("sys.dm_os_latch_stats" , CLEAR);
+DBCC SQLPERF("sys.dm_os_wait_stats" , CLEAR);
+GO
+ ```
+</details>
+
+<details>
+ <summary>Total disk usage for server</summary>
+ 
+ ```sql
+ SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
+ FROM master.sys.master_files
+ ```
+</details>
+
+<details>
+ <summary>Ola's IndexOptimize Script</summary>
+ 
+ ```sql
+EXECUTE dbo.IndexOptimize
+@Databases = 'USER_DATABASES',
+@FragmentationLow = NULL,
+@FragmentationMedium = 'INDEX_REORGANIZE,INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
+@FragmentationHigh = 'INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
+@FragmentationLevel1 = 5,
+@FragmentationLevel2 = 30,
+@UpdateStatistics = 'ALL',
+@OnlyModifiedStatistics = 'Y'
+ ```
+ 
+ ```sql
+EXECUTE dbo.IndexOptimize
+@Databases = 'USER_DATABASES',
+@FragmentationLow = NULL,
+@FragmentationMedium = NULL,
+@FragmentationHigh = NULL,
+@UpdateStatistics = 'ALL'
+ ```
+</details>
+
+<details>
+ <summary>Ola's DatabaseIntegrityCheck Script</summary>
+ 
+ ```sql
+EXECUTE dbo.DatabaseIntegrityCheck
+@Databases = 'USER_DATABASES',
+@CheckCommands = 'CHECKDB'
+ ```
+</details>
+
+<details>
+ <summary>Ola's DatabaseBackup Script</summary>
+ 
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'USER_DATABASES',
+@Directory = 'C:\Backup',
+@MirrorDirectory = 'D:\Backup',
+@BackupType = 'FULL',
+@Compress = 'Y',
+@Verify = 'Y',
+@CleanupTime = 24,
+@MirrorCleanupTime = 48	
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'SYSTEM_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'FULL',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 24
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'USER_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'LOG',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 1
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'USER_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'DIFF',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 6
+```
 </details>
 
 ## Extended Events
