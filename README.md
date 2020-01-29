@@ -12,6 +12,7 @@ Useful SQL Server scripts and snippets
 * [dbatools (Instance Migration)](https://dbatools.io/)
 * [SentryOne (Mostly paid)](https://www.sentryone.com/)
 * [RedGate (Mostly paid)](https://www.red-gate.com)
+* [PsExec (run SSMS as NT AUTHORITY\SYSTEM)](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec)
 * SQL Profiler
 * Extended Events
 * Visual Studio Schema Compare
@@ -65,6 +66,55 @@ Useful SQL Server scripts and snippets
   ```
 </details>
 
+<details>
+ <summary>sp_WhoIsActive</summary>
+ 
+ ```sql
+	EXEC [dbo].[sp_WhoIsActive] @get_full_inner_text = 1, @get_outer_command = 1, @get_plans = 1
+ ```
+</details>
+
+<details>
+ <summary>sp_BlitzFirst</summary>
+ 
+ ```sql
+	EXEC [dbo].[sp_BlitzFirst] @Seconds = 10, @ExpertMode = 1, @ShowSleepingSPIDS = 1
+ ```
+</details>
+
+<details>
+ <summary>sp_Blitz</summary>
+ 
+ ```sql
+	EXEC sp_Blitz
+ ```
+</details>
+
+<details>
+ <summary>sp_BlitzCache</summary>
+ 
+  ```sql
+	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'cpu', @ExpertMode = 1, @MinimumExecutionCount = 2
+ ```
+  ```sql
+	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'executions', @ExpertMode = 1, @MinimumExecutionCount = 2
+ ```
+ ```sql
+	EXEC sp_BlitzCache @Top = 100,  @SortOrder = 'avg reads', @ExpertMode = 1, @MinimumExecutionCount = 10
+ ```
+ ```sql
+	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'recent compilations', @ExpertMode = 1, @MinimumExecutionCount = 2
+ ```
+</details>
+
+<details>
+ <summary>sp_BlitzIndex</summary>
+ 
+ ```sql
+	EXEC sp_BlitzIndex
+ ```
+</details>
+
 ## Server specific queries
 
 <details>
@@ -73,5 +123,30 @@ Useful SQL Server scripts and snippets
  ```sql
  SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
  FROM master.sys.master_files
+ ```
+</details>
+
+<details>
+ <summary>dbo.IndexOptimize</summary>
+ 
+ ```sql
+	EXECUTE dbo.IndexOptimize
+@Databases = 'USER_DATABASES',
+@FragmentationLow = NULL,
+@FragmentationMedium = 'INDEX_REORGANIZE,INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
+@FragmentationHigh = 'INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
+@FragmentationLevel1 = 5,
+@FragmentationLevel2 = 30,
+@UpdateStatistics = 'ALL',
+@OnlyModifiedStatistics = 'Y'
+ ```
+ 
+ ```sql
+	EXECUTE dbo.IndexOptimize
+@Databases = 'USER_DATABASES',
+@FragmentationLow = NULL,
+@FragmentationMedium = NULL,
+@FragmentationHigh = NULL,
+@UpdateStatistics = 'ALL'
  ```
 </details>
