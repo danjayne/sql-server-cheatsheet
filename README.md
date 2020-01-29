@@ -1,12 +1,16 @@
 # sql-server-cheatsheet
 Useful SQL Server scripts and snippets
 
-## Useful links
+## Useful tools
 
 * [Brent Ozar's First Responder Kit](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit)
 * [Adam Mechanic's sp_WhoIsActive](https://github.com/amachanic/sp_whoisactive/releases)
 * [Ola Hallengren Scripts](https://ola.hallengren.com/)
 * [RedGate SQL Search](https://www.red-gate.com/dynamic/products/sql-development/sql-search/download)
+* [Statistics Parser](http://statisticsparser.com/)
+* [Brent Ozar's Paste the Plan](https://www.brentozar.com/pastetheplan/)
+* [dbatools (Instance Migration)](https://dbatools.io/)
+
 
 ## Queries for all DBs
 
