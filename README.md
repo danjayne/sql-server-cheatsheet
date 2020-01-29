@@ -12,6 +12,11 @@ Useful SQL Server scripts and snippets
 * [dbatools (Instance Migration)](https://dbatools.io/)
 * [SentryOne (Mostly paid)](https://www.sentryone.com/)
 * [RedGate (Mostly paid)](https://www.red-gate.com)
+* SQL Profiler
+* Extended Events
+* Visual Studio Schema Compare
+* Visual Studio Data Compare
+* Query Store
 
 ## Blogs & Resources
 * [SQL Server Central](https://www.sqlservercentral.com/)
@@ -25,7 +30,7 @@ Useful SQL Server scripts and snippets
 * [SentryOne Blog](https://www.sentryone.com/blog)
 * [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
-## Queries for all DBs
+## Queries per Database
 
 <details>
  <summary>Table row counts & disk usage</summary>
@@ -60,4 +65,11 @@ Useful SQL Server scripts and snippets
   ```
 </details>
 
-
+<details>
+ <summary>Total disk usage for server</summary>
+ 
+ ```sql
+ SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
+ FROM master.sys.master_files
+ ```
+</details>
