@@ -127,10 +127,10 @@ Useful SQL Server scripts and snippets
 </details>
 
 <details>
- <summary>dbo.IndexOptimize</summary>
+ <summary>Ola's IndexOptimize Script</summary>
  
  ```sql
-	EXECUTE dbo.IndexOptimize
+EXECUTE dbo.IndexOptimize
 @Databases = 'USER_DATABASES',
 @FragmentationLow = NULL,
 @FragmentationMedium = 'INDEX_REORGANIZE,INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
@@ -142,11 +142,70 @@ Useful SQL Server scripts and snippets
  ```
  
  ```sql
-	EXECUTE dbo.IndexOptimize
+EXECUTE dbo.IndexOptimize
 @Databases = 'USER_DATABASES',
 @FragmentationLow = NULL,
 @FragmentationMedium = NULL,
 @FragmentationHigh = NULL,
 @UpdateStatistics = 'ALL'
  ```
+</details>
+
+<details>
+ <summary>Ola's DatabaseIntegrityCheck Script</summary>
+ 
+ ```sql
+EXECUTE dbo.DatabaseIntegrityCheck
+@Databases = 'USER_DATABASES',
+@CheckCommands = 'CHECKDB'
+ ```
+</details>
+
+<details>
+ <summary>Ola's DatabaseBackup Script</summary>
+ 
+	```sql
+	EXECUTE dbo.DatabaseBackup
+	@Databases = 'USER_DATABASES',
+	@Directory = 'C:\Backup',
+	@MirrorDirectory = 'D:\Backup',
+	@BackupType = 'FULL',
+	@Compress = 'Y',
+	@Verify = 'Y',
+	@CleanupTime = 24,
+	@MirrorCleanupTime = 48	
+	```
+ 
+	```sql
+	EXECUTE dbo.DatabaseBackup
+	@Databases = 'SYSTEM_DATABASES',
+	@Directory = 'C:\Backup',
+	@BackupType = 'FULL',
+	@Verify = 'Y',
+	@Compress = 'Y',
+	@CheckSum = 'Y',
+	@CleanupTime = 24
+	```
+	
+	```sql
+	EXECUTE dbo.DatabaseBackup
+	@Databases = 'SYSTEM_DATABASES',
+	@Directory = 'C:\Backup',
+	@BackupType = 'LOG',
+	@Verify = 'Y',
+	@Compress = 'Y',
+	@CheckSum = 'Y',
+	@CleanupTime = 1
+	```
+	
+	```sql
+	EXECUTE dbo.DatabaseBackup
+	@Databases = 'SYSTEM_DATABASES',
+	@Directory = 'C:\Backup',
+	@BackupType = 'DIFF',
+	@Verify = 'Y',
+	@Compress = 'Y',
+	@CheckSum = 'Y',
+	@CleanupTime = 6
+	```
 </details>
