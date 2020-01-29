@@ -128,6 +128,29 @@ SET STATISTICS IO, TIME OFF;
  ```
 </details>
 
+<details>
+ <summary>DBCC SQLPERF</summary>
+ 
+ ```sql
+ DBCC SQLPERF (LOGSPACE);
+ ```
+ 
+ ```sql
+DBCC SQLPERF("sys.dm_os_latch_stats" , CLEAR);
+DBCC SQLPERF("sys.dm_os_wait_stats" , CLEAR);
+GO
+ ```
+</details>
+
+<details>
+ <summary>DBCC SHOW_STATISTICS</summary>
+ 
+ ```sql
+DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
+ ```
+</details>
+
+
 ## Server specific queries
 
 <details>
