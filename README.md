@@ -800,6 +800,8 @@ GO
  ```
  
  ```sql
- SELECT * FROM [dbo].[PlanCache] 
+ SELECT * FROM [dbo].[PlanCache]
+ WHERE objtype = 'Proc'
+ ORDER BY usecounts
  ```
 </details>
