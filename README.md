@@ -189,7 +189,7 @@ EXECUTE dbo.DatabaseBackup
 
 ```sql
 EXECUTE dbo.DatabaseBackup
-@Databases = 'SYSTEM_DATABASES',
+@Databases = 'USER_DATABASES',
 @Directory = 'C:\Backup',
 @BackupType = 'LOG',
 @Verify = 'Y',
@@ -200,7 +200,7 @@ EXECUTE dbo.DatabaseBackup
 
 ```sql
 EXECUTE dbo.DatabaseBackup
-@Databases = 'SYSTEM_DATABASES',
+@Databases = 'USER_DATABASES',
 @Directory = 'C:\Backup',
 @BackupType = 'DIFF',
 @Verify = 'Y',
