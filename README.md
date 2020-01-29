@@ -709,12 +709,6 @@ FROM #capture_waits_data
 	<summary>DDL Trigger to track schema changes</summary>
 	<p>
 ```sql
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[DDL_Change_Log](
 	[EventDate] [datetime2](7) NOT NULL,
 	[EventType] [nvarchar](100) NULL,
@@ -729,11 +723,12 @@ CREATE TABLE [dbo].[DDL_Change_Log](
 	[LoginName] [nvarchar](255) NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-
 ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
 GO
-
-CREATE TRIGGER [DDL_Change_Trigger]
+```
+		
+```sql
+CREATE TRIGGER DDL_Change_Trigger
 ON DATABASE
 FOR CREATE_PROCEDURE, ALTER_PROCEDURE, DROP_PROCEDURE, 
 	CREATE_TABLE, ALTER_TABLE, DROP_TABLE,
@@ -773,8 +768,7 @@ BEGIN
 		SUSER_SNAME();
 END
 GO
-
-ENABLE TRIGGER [DDL_Change_Trigger] ON DATABASE
+ENABLE TRIGGER DDL_Change_Trigger ON DATABASE
 GO
 ```
 </p>
