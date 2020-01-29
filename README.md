@@ -774,3 +774,28 @@ GO
 ```
 </p>
 </details>
+
+<details>
+ <summary>List plan cache</summary>
+ 
+ ```sql
+CREATE OR ALTER FUNCTION [dbo].[SqlAndPlan](@handle varbinary(max))
+RETURNS TABLE
+AS
+	RETURN SELECT sql.text, cp.usecounts, cp.cacheobjtype, cp.objtype, cp.size_in_bytes, qp.query_plan
+		FROM
+		sys.dm_exec_sql_text(@handle) AS SQL CROSS JOIN
+		sys.dm_exec_query_plan(@handle) as qp
+		JOIN sys.dm_exec_cached_plans AS cp
+		ON cp.plan_handle = @handle;
+GO
+
+CREATE OR ALTER VIEW [dbo].[PlanCache]
+AS
+(
+	SELECT sp.*, cp.plan_handle FROM sys.dm_exec_cached_plans AS cp
+	CROSS APPLY SqlAndPlan(cp.plan_handle) AS sp
+)
+GO
+ ```
+</details>
