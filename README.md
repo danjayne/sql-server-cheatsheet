@@ -164,48 +164,48 @@ EXECUTE dbo.DatabaseIntegrityCheck
 <details>
  <summary>Ola's DatabaseBackup Script</summary>
  
-	```sql
-	EXECUTE dbo.DatabaseBackup
-	@Databases = 'USER_DATABASES',
-	@Directory = 'C:\Backup',
-	@MirrorDirectory = 'D:\Backup',
-	@BackupType = 'FULL',
-	@Compress = 'Y',
-	@Verify = 'Y',
-	@CleanupTime = 24,
-	@MirrorCleanupTime = 48	
-	```
- 
-	```sql
-	EXECUTE dbo.DatabaseBackup
-	@Databases = 'SYSTEM_DATABASES',
-	@Directory = 'C:\Backup',
-	@BackupType = 'FULL',
-	@Verify = 'Y',
-	@Compress = 'Y',
-	@CheckSum = 'Y',
-	@CleanupTime = 24
-	```
-	
-	```sql
-	EXECUTE dbo.DatabaseBackup
-	@Databases = 'SYSTEM_DATABASES',
-	@Directory = 'C:\Backup',
-	@BackupType = 'LOG',
-	@Verify = 'Y',
-	@Compress = 'Y',
-	@CheckSum = 'Y',
-	@CleanupTime = 1
-	```
-	
-	```sql
-	EXECUTE dbo.DatabaseBackup
-	@Databases = 'SYSTEM_DATABASES',
-	@Directory = 'C:\Backup',
-	@BackupType = 'DIFF',
-	@Verify = 'Y',
-	@Compress = 'Y',
-	@CheckSum = 'Y',
-	@CleanupTime = 6
-	```
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'USER_DATABASES',
+@Directory = 'C:\Backup',
+@MirrorDirectory = 'D:\Backup',
+@BackupType = 'FULL',
+@Compress = 'Y',
+@Verify = 'Y',
+@CleanupTime = 24,
+@MirrorCleanupTime = 48	
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'SYSTEM_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'FULL',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 24
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'SYSTEM_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'LOG',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 1
+```
+
+```sql
+EXECUTE dbo.DatabaseBackup
+@Databases = 'SYSTEM_DATABASES',
+@Directory = 'C:\Backup',
+@BackupType = 'DIFF',
+@Verify = 'Y',
+@Compress = 'Y',
+@CheckSum = 'Y',
+@CleanupTime = 6
+```
 </details>
