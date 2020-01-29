@@ -36,11 +36,9 @@ Useful SQL Server scripts and snippets
  <summary>SET STATISTICS</summary>
  
  ```sql
-SET STATISTICS IO ON;
-SET STATISTICS TIME ON;
+SET STATISTICS IO, TIME ON;
 -- Query
-SET STATISTICS IO OFF;
-SET STATISTICS TIME OFF;
+SET STATISTICS IO, TIME OFF;
  ```
 </details>
 
