@@ -11,7 +11,7 @@ Useful SQL Server scripts and snippets
 * [Brent Ozar's Paste the Plan](https://www.brentozar.com/pastetheplan/)
 * [dbatools (Instance Migration)](https://dbatools.io/)
 * [SentryOne (Mostly paid)](https://www.sentryone.com/)
-* [RedGate (Mostly paid](https://www.red-gate.com)
+* [RedGate (Mostly paid)](https://www.red-gate.com)
 
 ## Blogs & Resources
 * [SQL Server Central](https://www.sqlservercentral.com/)
@@ -23,7 +23,7 @@ Useful SQL Server scripts and snippets
 * [DBA StackExchange](https://dba.stackexchange.com/?tags=sql-server)
 * [RedGate's Simple Talk Blog](https://www.red-gate.com/simple-talk/)
 * [SentryOne Blog](https://www.sentryone.com/blog)
-
+* [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
 ## Queries for all DBs
 
