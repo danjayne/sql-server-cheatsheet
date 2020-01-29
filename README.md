@@ -409,3 +409,64 @@ close CursorIndex
 deallocate CursorIndex
  ```
 </details>
+
+<details>
+ <summary>Get current Isolation Level</summary>
+ 
+ ```sql
+SELECT CASE transaction_isolation_level 
+WHEN 0 THEN 'Unspecified' 
+WHEN 1 THEN 'ReadUncommitted' 
+WHEN 2 THEN 'ReadCommitted' 
+WHEN 3 THEN 'Repeatable' 
+WHEN 4 THEN 'Serializable' 
+WHEN 5 THEN 'Snapshot' END AS TRANSACTION_ISOLATION_LEVEL 
+FROM sys.dm_exec_sessions 
+where session_id = @@SPID
+ ```
+</details>
+
+<details>
+ <summary>Kill all connections but mine</summary>
+ 
+ ```sql
+DECLARE @kill varchar(8000) = '';
+
+SELECT @kill = @kill + 'KILL ' + CONVERT(varchar(5), c.session_id) + ';'
+
+FROM sys.dm_exec_connections AS c
+JOIN sys.dm_exec_sessions AS s
+    ON c.session_id = s.session_id
+WHERE c.session_id <> @@SPID
+--WHERE status = 'sleeping'
+ORDER BY c.connect_time ASC
+
+PRINT @kill
+
+EXEC(@kill)
+ ```
+</details>
+
+<details>
+ <summary>Parameter list for Stored Procedure</summary>
+ 
+ ```sql
+SELECT 'Parameter_name' = name,
+       'Type' = TYPE_NAME(user_type_id),
+       'Length' = max_length,
+       'Prec' = CASE
+                    WHEN TYPE_NAME(system_type_id) = 'uniqueidentifier'
+                    THEN precision
+                    ELSE OdbcPrec(system_type_id, max_length, precision)
+                END,
+       'Scale' = OdbcScale(system_type_id, scale),
+       'Param_order' = parameter_id,
+       'Collation' = CONVERT(SYSNAME,
+                             CASE
+                                 WHEN system_type_id IN(35, 99, 167, 175, 231, 239)
+                                 THEN SERVERPROPERTY('collation')
+                             END)
+FROM sys.parameters
+WHERE object_id = OBJECT_ID('dbo.TableName');
+ ```
+</details>
