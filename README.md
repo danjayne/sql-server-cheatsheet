@@ -128,6 +128,8 @@ SET STATISTICS IO, TIME OFF;
  ```
 </details>
 
+## Server specific queries
+
 <details>
  <summary>DBCC SQLPERF</summary>
  
@@ -149,9 +151,6 @@ GO
 DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
  ```
 </details>
-
-
-## Server specific queries
 
 <details>
  <summary>Total disk usage for server</summary>
@@ -244,4 +243,16 @@ EXECUTE dbo.DatabaseBackup
 @CheckSum = 'Y',
 @CleanupTime = 6
 ```
+</details>
+
+<details>
+ <summary>Clear proc cache (Azure SQL)</summary>
+ 
+ ```sql
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE ;  
+ ```
+ 
+```sql
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE (0x0...);  
+ ```
 </details>
