@@ -611,7 +611,8 @@ GROUP BY [W1].[RowNum]
 HAVING SUM ([W2].[Percentage]) - MAX( [W1].[Percentage] ) < 95; -- percentage threshold
 GO
  ```
- 
+</details>
+
 <details>
  <summary>Tell me where it hurts (Azure SQL)</summary>
  
@@ -681,4 +682,5 @@ OPTION (RECOMPILE);
 ------
  ```
 </details>
-</details>
+
+
