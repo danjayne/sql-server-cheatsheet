@@ -30,7 +30,7 @@ Useful SQL Server scripts and snippets
 * [SentryOne Blog](https://www.sentryone.com/blog)
 * [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
-## Queries per Database
+## Database specific queries
 
 <details>
  <summary>Table row counts & disk usage</summary>
@@ -64,6 +64,8 @@ Useful SQL Server scripts and snippets
    OBJECT_NAME(i.object_id) 
   ```
 </details>
+
+## Server specific queries
 
 <details>
  <summary>Total disk usage for server</summary>
