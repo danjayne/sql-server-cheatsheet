@@ -155,7 +155,7 @@ SET STATISTICS IO, TIME OFF;
 	msdb.dbo.backupset.description 
 	FROM msdb.dbo.backupmediafamily 
 	INNER JOIN msdb.dbo.backupset ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id 
-	WHERE (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - 14) 
+	WHERE (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - 7) 
 	AND msdb.dbo.backupset.database_name = 'DatabaseName' AND msdb..backupset.type = 'D'
 	ORDER BY 
 	msdb.dbo.backupset.database_name, 
