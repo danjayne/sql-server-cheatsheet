@@ -13,6 +13,7 @@ Useful SQL Server scripts and snippets
 * [SentryOne (Mostly paid)](https://www.sentryone.com/)
 * [RedGate (Mostly paid)](https://www.red-gate.com)
 * [PsExec (run SSMS as NT AUTHORITY\SYSTEM)](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec)
+* [RML Utilities (includes ostress)](https://www.microsoft.com/en-us/download/details.aspx?id=4511)
 * SQL Profiler
 * Extended Events
 * Visual Studio Schema Compare
