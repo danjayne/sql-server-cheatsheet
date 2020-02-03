@@ -14,6 +14,8 @@ Useful SQL Server scripts and snippets
 * [RedGate (Mostly paid)](https://www.red-gate.com)
 * [PsExec (run SSMS as NT AUTHORITY\SYSTEM)](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec)
 * [RML Utilities (includes ostress)](https://www.microsoft.com/en-us/download/details.aspx?id=4511)
+* [dbForge SQL Complete](https://www.devart.com/dbforge/sql/sqlcomplete/)
+* [Apex SQL Tools](https://www.apexsql.com/Download.aspx)
 * SQL Profiler
 * Extended Events
 * Visual Studio Schema Compare
