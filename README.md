@@ -341,7 +341,7 @@ DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
 
 
 <details>
- <summary>Add Table and Column comments (~Azure SQL~)</summary>
+ <summary>Add Table and Column comments (~~Azure SQL~~)</summary>
  
 ```sql
 declare @CurrentUser sysname
