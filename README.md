@@ -99,32 +99,32 @@ FROM   comp;
  <summary>Table row counts & disk usage</summary>
 
 ```sql
-	SELECT 
-	 t.NAME AS TableName,
-	 i.name AS indexName,
-	 SUM(p.rows) AS RowCounts,
-	 SUM(a.total_pages) AS TotalPages, 
-	 SUM(a.used_pages) AS UsedPages, 
-	 SUM(a.data_pages) AS DataPages,
-	 (SUM(a.total_pages) * 8) / 1024 AS TotalSpaceMB, 
-	 (SUM(a.used_pages) * 8) / 1024 AS UsedSpaceMB, 
-	 (SUM(a.data_pages) * 8) / 1024 AS DataSpaceMB
-	FROM 
-	 sys.tables t
-	INNER JOIN  
-	 sys.indexes i ON t.OBJECT_ID = i.object_id
-	INNER JOIN 
-	 sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id
-	INNER JOIN 
-	 sys.allocation_units a ON p.partition_id = a.container_id
-	WHERE 
-	 t.NAME NOT LIKE 'dt%' AND
-	 i.OBJECT_ID > 255 AND  
-	 i.index_id <= 1
-	GROUP BY 
-	 t.NAME, i.object_id, i.index_id, i.name 
-	ORDER BY 
-	 OBJECT_NAME(i.object_id) 
+SELECT 
+	t.NAME AS TableName,
+	i.name AS indexName,
+	SUM(p.rows) AS RowCounts,
+	SUM(a.total_pages) AS TotalPages, 
+	SUM(a.used_pages) AS UsedPages, 
+	SUM(a.data_pages) AS DataPages,
+	(SUM(a.total_pages) * 8) / 1024 AS TotalSpaceMB, 
+	(SUM(a.used_pages) * 8) / 1024 AS UsedSpaceMB, 
+	(SUM(a.data_pages) * 8) / 1024 AS DataSpaceMB
+FROM 
+	sys.tables t
+INNER JOIN  
+	sys.indexes i ON t.OBJECT_ID = i.object_id
+INNER JOIN 
+	sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id
+INNER JOIN 
+	sys.allocation_units a ON p.partition_id = a.container_id
+WHERE 
+	t.NAME NOT LIKE 'dt%' AND
+	i.OBJECT_ID > 255 AND  
+	i.index_id <= 1
+GROUP BY 
+	t.NAME, i.object_id, i.index_id, i.name 
+ORDER BY 
+	OBJECT_NAME(i.object_id) 
 ```
 </details>
 
@@ -132,7 +132,7 @@ FROM   comp;
  <summary>sp_WhoIsActive</summary>
  
  ```sql
-	EXEC [dbo].[sp_WhoIsActive] @get_full_inner_text = 1, @get_outer_command = 1, @get_plans = 1
+EXECUTE [dbo].[sp_WhoIsActive] @get_full_inner_text = 1, @get_outer_command = 1, @get_plans = 1
  ```
 </details>
 
@@ -140,7 +140,7 @@ FROM   comp;
  <summary>sp_BlitzFirst</summary>
  
  ```sql
-	EXEC [dbo].[sp_BlitzFirst] @Seconds = 10, @ExpertMode = 1, @ShowSleepingSPIDS = 1
+EXECUTE [dbo].[sp_BlitzFirst] @Seconds = 10, @ExpertMode = 1, @ShowSleepingSPIDS = 1
  ```
 </details>
 
@@ -148,32 +148,32 @@ FROM   comp;
  <summary>sp_Blitz</summary>
  
  ```sql
-	EXEC sp_Blitz
+EXECUTE sp_Blitz
  ```
 </details>
 
 <details>
  <summary>sp_BlitzCache</summary>
  
-  ```sql
-	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'cpu', @ExpertMode = 1, @MinimumExecutionCount = 2
- ```
-  ```sql
-	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'executions', @ExpertMode = 1, @MinimumExecutionCount = 2
- ```
- ```sql
-	EXEC sp_BlitzCache @Top = 100,  @SortOrder = 'avg reads', @ExpertMode = 1, @MinimumExecutionCount = 10
- ```
- ```sql
-	EXEC sp_BlitzCache @Top = 10,  @SortOrder = 'recent compilations', @ExpertMode = 1, @MinimumExecutionCount = 2
- ```
+```sql
+EXECUTE sp_BlitzCache @Top = 10,  @SortOrder = 'cpu', @ExpertMode = 1, @MinimumExecutionCount = 2
+```
+```sql
+EXECUTE sp_BlitzCache @Top = 10,  @SortOrder = 'executions', @ExpertMode = 1, @MinimumExecutionCount = 2
+```
+```sql
+EXECUTE sp_BlitzCache @Top = 100,  @SortOrder = 'avg reads', @ExpertMode = 1, @MinimumExecutionCount = 10
+```
+```sql
+EXECUTE sp_BlitzCache @Top = 10,  @SortOrder = 'recent compilations', @ExpertMode = 1, @MinimumExecutionCount = 2
+```
 </details>
 
 <details>
  <summary>sp_BlitzIndex</summary>
  
  ```sql
-	EXEC sp_BlitzIndex
+EXECUTE sp_BlitzIndex
  ```
 </details>
 
@@ -181,32 +181,32 @@ FROM   comp;
 	<summary>Database Backups for Previous Week</summary>
 	
 ```sql
-	--------------------------------------------------------------------------------- 
-	--Database Backups for all databases For Previous Week 
-	--------------------------------------------------------------------------------- 
-	SELECT 
-	CONVERT(CHAR(100), SERVERPROPERTY('Servername')) AS Server, 
-	msdb.dbo.backupset.database_name, 
-	msdb.dbo.backupset.backup_start_date, 
-	msdb.dbo.backupset.backup_finish_date, 
-	msdb.dbo.backupset.expiration_date, 
-	CASE msdb..backupset.type 
-	WHEN 'D' THEN 'Database' 
-	WHEN 'L' THEN 'Log' 
-	END AS backup_type, 
-	msdb.dbo.backupset.backup_size, 
-	--convert(decimal(18,3),(sum(msdb.dbo.backupset.backup_size))/1024/1024/1024) as SizeinGB,
-	msdb.dbo.backupmediafamily.logical_device_name, 
-	msdb.dbo.backupmediafamily.physical_device_name, 
-	msdb.dbo.backupset.name AS backupset_name, 
-	msdb.dbo.backupset.description 
-	FROM msdb.dbo.backupmediafamily 
-	INNER JOIN msdb.dbo.backupset ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id 
-	WHERE (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - 7) 
-	AND msdb.dbo.backupset.database_name = 'DatabaseName' AND msdb..backupset.type = 'D'
-	ORDER BY 
-	msdb.dbo.backupset.database_name, 
-	msdb.dbo.backupset.backup_finish_date 
+--------------------------------------------------------------------------------- 
+--Database Backups for all databases For Previous Week 
+--------------------------------------------------------------------------------- 
+SELECT 
+CONVERT(CHAR(100), SERVERPROPERTY('Servername')) AS Server, 
+msdb.dbo.backupset.database_name, 
+msdb.dbo.backupset.backup_start_date, 
+msdb.dbo.backupset.backup_finish_date, 
+msdb.dbo.backupset.expiration_date, 
+CASE msdb..backupset.type 
+WHEN 'D' THEN 'Database' 
+WHEN 'L' THEN 'Log' 
+END AS backup_type, 
+msdb.dbo.backupset.backup_size, 
+--convert(decimal(18,3),(sum(msdb.dbo.backupset.backup_size))/1024/1024/1024) as SizeinGB,
+msdb.dbo.backupmediafamily.logical_device_name, 
+msdb.dbo.backupmediafamily.physical_device_name, 
+msdb.dbo.backupset.name AS backupset_name, 
+msdb.dbo.backupset.description 
+FROM msdb.dbo.backupmediafamily 
+INNER JOIN msdb.dbo.backupset ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id 
+WHERE (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - 7) 
+AND msdb.dbo.backupset.database_name = 'DatabaseName' AND msdb..backupset.type = 'D'
+ORDER BY 
+msdb.dbo.backupset.database_name, 
+msdb.dbo.backupset.backup_finish_date 
 ```
 </details>
 
@@ -214,81 +214,81 @@ FROM   comp;
 	<summary>Database physical size vs used space</summary>
 	
 ```sql
-	IF OBJECT_ID('tempdb.dbo.#space') IS NOT NULL
-			DROP TABLE #space
-	CREATE TABLE #space (
-				database_id INT PRIMARY KEY
-			, data_used_size DECIMAL(18,2)
-			, log_used_size DECIMAL(18,2)
-	)
-	DECLARE @SQL NVARCHAR(MAX)
-	SELECT @SQL = STUFF((
-			SELECT '
-			USE [' + d.name + ']
-			INSERT INTO #space (database_id, data_used_size, log_used_size)
-			SELECT
-						DB_ID()
-					, SUM(CASE WHEN [type] = 0 THEN space_used END)
-					, SUM(CASE WHEN [type] = 1 THEN space_used END)
-			FROM (
-					SELECT s.[type], space_used = SUM(FILEPROPERTY(s.name, ''SpaceUsed'') * 8. / 1024)
-					FROM sys.database_files s
-					GROUP BY s.[type]
-			) t;'
-			FROM sys.databases d
-			WHERE d.[state] = 0
-			FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '')
-	EXEC sys.sp_executesql @SQL
-	SELECT
-				d.database_id
-			, d.name
-			, d.state_desc
-			, d.recovery_model_desc
-			, t.total_size
-			, t.data_size
-			, s.data_used_size
-			, t.log_size
-			, s.log_used_size
-			, bu.full_last_date
-			, bu.full_size
-			, bu.log_last_date
-			, bu.log_size
-	FROM (
-			SELECT
-						database_id
-					, log_size = CAST(SUM(CASE WHEN [type] = 1 THEN size END) * 8. / 1024 AS DECIMAL(18,2))
-					, data_size = CAST(SUM(CASE WHEN [type] = 0 THEN size END) * 8. / 1024 AS DECIMAL(18,2))
-					, total_size = CAST(SUM(size) * 8. / 1024 AS DECIMAL(18,2))
-			FROM sys.master_files
-			GROUP BY database_id
-	) t
-	JOIN sys.databases d ON d.database_id = t.database_id
-	LEFT JOIN #space s ON d.database_id = s.database_id
-	LEFT JOIN (
-			SELECT
-						database_name
-					, full_last_date = MAX(CASE WHEN [type] = 'D' THEN backup_finish_date END)
-					, full_size = MAX(CASE WHEN [type] = 'D' THEN backup_size END)
-					, log_last_date = MAX(CASE WHEN [type] = 'L' THEN backup_finish_date END)
-					, log_size = MAX(CASE WHEN [type] = 'L' THEN backup_size END)
-			FROM (
-					SELECT
-								s.database_name
-							, s.[type]
-							, s.backup_finish_date
-							, backup_size =
-													CAST(CASE WHEN s.backup_size = s.compressed_backup_size
-																			THEN s.backup_size
-																			ELSE s.compressed_backup_size
-													END / 1048576.0 AS DECIMAL(18,2))
-							, RowNum = ROW_NUMBER() OVER (PARTITION BY s.database_name, s.[type] ORDER BY s.backup_finish_date DESC)
-					FROM msdb.dbo.backupset s
-					WHERE s.[type] IN ('D', 'L')
-			) f
-			WHERE f.RowNum = 1
-			GROUP BY f.database_name
-	) bu ON d.name = bu.database_name
-	ORDER BY t.total_size DESC
+IF OBJECT_ID('tempdb.dbo.#space') IS NOT NULL
+		DROP TABLE #space
+CREATE TABLE #space (
+			database_id INT PRIMARY KEY
+		, data_used_size DECIMAL(18,2)
+		, log_used_size DECIMAL(18,2)
+)
+DECLARE @SQL NVARCHAR(MAX)
+SELECT @SQL = STUFF((
+		SELECT '
+		USE [' + d.name + ']
+		INSERT INTO #space (database_id, data_used_size, log_used_size)
+		SELECT
+					DB_ID()
+				, SUM(CASE WHEN [type] = 0 THEN space_used END)
+				, SUM(CASE WHEN [type] = 1 THEN space_used END)
+		FROM (
+				SELECT s.[type], space_used = SUM(FILEPROPERTY(s.name, ''SpaceUsed'') * 8. / 1024)
+				FROM sys.database_files s
+				GROUP BY s.[type]
+		) t;'
+		FROM sys.databases d
+		WHERE d.[state] = 0
+		FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '')
+EXECUTE sys.sp_executesql @SQL
+SELECT
+			d.database_id
+		, d.name
+		, d.state_desc
+		, d.recovery_model_desc
+		, t.total_size
+		, t.data_size
+		, s.data_used_size
+		, t.log_size
+		, s.log_used_size
+		, bu.full_last_date
+		, bu.full_size
+		, bu.log_last_date
+		, bu.log_size
+FROM (
+		SELECT
+					database_id
+				, log_size = CAST(SUM(CASE WHEN [type] = 1 THEN size END) * 8. / 1024 AS DECIMAL(18,2))
+				, data_size = CAST(SUM(CASE WHEN [type] = 0 THEN size END) * 8. / 1024 AS DECIMAL(18,2))
+				, total_size = CAST(SUM(size) * 8. / 1024 AS DECIMAL(18,2))
+		FROM sys.master_files
+		GROUP BY database_id
+) t
+JOIN sys.databases d ON d.database_id = t.database_id
+LEFT JOIN #space s ON d.database_id = s.database_id
+LEFT JOIN (
+		SELECT
+					database_name
+				, full_last_date = MAX(CASE WHEN [type] = 'D' THEN backup_finish_date END)
+				, full_size = MAX(CASE WHEN [type] = 'D' THEN backup_size END)
+				, log_last_date = MAX(CASE WHEN [type] = 'L' THEN backup_finish_date END)
+				, log_size = MAX(CASE WHEN [type] = 'L' THEN backup_size END)
+		FROM (
+				SELECT
+							s.database_name
+						, s.[type]
+						, s.backup_finish_date
+						, backup_size =
+												CAST(CASE WHEN s.backup_size = s.compressed_backup_size
+																		THEN s.backup_size
+																		ELSE s.compressed_backup_size
+												END / 1048576.0 AS DECIMAL(18,2))
+						, RowNum = ROW_NUMBER() OVER (PARTITION BY s.database_name, s.[type] ORDER BY s.backup_finish_date DESC)
+				FROM msdb.dbo.backupset s
+				WHERE s.[type] IN ('D', 'L')
+		) f
+		WHERE f.RowNum = 1
+		GROUP BY f.database_name
+) bu ON d.name = bu.database_name
+ORDER BY t.total_size DESC
 ```
 </details>
 
@@ -334,33 +334,33 @@ ORDER BY LastStatsUpdate
 <details>
  <summary>DBCC SHOW_STATISTICS</summary>
  
- ```sql
+```sql
 DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
- ```
+```
 </details>
 
 <details>
  <summary>Parameter list for Stored Procedure</summary>
  
- ```sql
+```sql
 SELECT 'Parameter_name' = name,
-       'Type' = TYPE_NAME(user_type_id),
-       'Length' = max_length,
-       'Prec' = CASE
-                    WHEN TYPE_NAME(system_type_id) = 'uniqueidentifier'
-                    THEN precision
-                    ELSE OdbcPrec(system_type_id, max_length, precision)
-                END,
-       'Scale' = OdbcScale(system_type_id, scale),
-       'Param_order' = parameter_id,
-       'Collation' = CONVERT(SYSNAME,
-                             CASE
-                                 WHEN system_type_id IN(35, 99, 167, 175, 231, 239)
-                                 THEN SERVERPROPERTY('collation')
-                             END)
+	'Type' = TYPE_NAME(user_type_id),
+	'Length' = max_length,
+	'Prec' = CASE
+				WHEN TYPE_NAME(system_type_id) = 'uniqueidentifier'
+				THEN precision
+				ELSE OdbcPrec(system_type_id, max_length, precision)
+			END,
+	'Scale' = OdbcScale(system_type_id, scale),
+	'Param_order' = parameter_id,
+	'Collation' = CONVERT(SYSNAME,
+							CASE
+								WHEN system_type_id IN(35, 99, 167, 175, 231, 239)
+								THEN SERVERPROPERTY('collation')
+							END)
 FROM sys.parameters
 WHERE object_id = OBJECT_ID('dbo.TableName');
- ```
+```
 </details>
 
 <details>
@@ -384,7 +384,7 @@ WHERE is_ambiguous = 0
 <details>
  <summary>Tell me where it hurts</summary>
  
- ```sql
+```sql
 -- Last updated February 26, 2019
 WITH [Waits] AS
     (SELECT
@@ -502,7 +502,7 @@ INNER JOIN [Waits] AS [W2] ON [W2].[RowNum] <= [W1].[RowNum]
 GROUP BY [W1].[RowNum]
 HAVING SUM ([W2].[Percentage]) - MAX( [W1].[Percentage] ) < 95; -- percentage threshold
 GO
- ```
+```
 </details>
 
 <details>
@@ -510,22 +510,22 @@ GO
 	<p>
 
 ```sql
-	CREATE TABLE [dbo].[DDL_Change_Log](
-		[EventDate] [datetime2](7) NOT NULL,
-		[EventType] [nvarchar](100) NULL,
-		[EventDDL] [nvarchar](max) NULL,
-		[EventXML] [xml] NULL,
-		[DatabaseName] [nvarchar](255) NULL,
-		[SchemaName] [nvarchar](255) NULL,
-		[ObjectName] [nvarchar](255) NULL,
-		[HostName] [varchar](64) NULL,
-		[IPAddress] [varchar](48) NULL,
-		[ProgramName] [nvarchar](255) NULL,
-		[LoginName] [nvarchar](255) NULL
-	) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-	GO
-	ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
-	GO
+CREATE TABLE [dbo].[DDL_Change_Log](
+	[EventDate] [datetime2](7) NOT NULL,
+	[EventType] [nvarchar](100) NULL,
+	[EventDDL] [nvarchar](max) NULL,
+	[EventXML] [xml] NULL,
+	[DatabaseName] [nvarchar](255) NULL,
+	[SchemaName] [nvarchar](255) NULL,
+	[ObjectName] [nvarchar](255) NULL,
+	[HostName] [varchar](64) NULL,
+	[IPAddress] [varchar](48) NULL,
+	[ProgramName] [nvarchar](255) NULL,
+	[LoginName] [nvarchar](255) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[DDL_Change_Log] ADD  DEFAULT (getutcdate()) FOR [EventDate]
+GO
 ```
 		
 ```sql
@@ -578,7 +578,7 @@ GO
 <details>
  <summary>List plan cache</summary>
  
- ```sql
+```sql
 CREATE OR ALTER FUNCTION [dbo].[SqlAndPlan](@handle varbinary(max))
 RETURNS TABLE
 AS
@@ -597,19 +597,19 @@ AS
 	CROSS APPLY SqlAndPlan(cp.plan_handle) AS sp
 )
 GO
- ```
+```
  
- ```sql
- SELECT * FROM [dbo].[PlanCache]
- WHERE objtype = 'Proc'
- ORDER BY usecounts
- ```
+```sql
+SELECT * FROM [dbo].[PlanCache]
+WHERE objtype = 'Proc'
+ORDER BY usecounts
+```
 </details>
 
 <details>
  <summary>Get current Isolation Level</summary>
  
- ```sql
+```sql
 SELECT CASE transaction_isolation_level 
 WHEN 0 THEN 'Unspecified' 
 WHEN 1 THEN 'ReadUncommitted' 
@@ -619,13 +619,13 @@ WHEN 4 THEN 'Serializable'
 WHEN 5 THEN 'Snapshot' END AS TRANSACTION_ISOLATION_LEVEL 
 FROM sys.dm_exec_sessions 
 where session_id = @@SPID
- ```
+```
 </details>
 
 <details>
  <summary>Kill all connections but mine</summary>
  
- ```sql
+```sql
 DECLARE @kill varchar(8000) = '';
 
 SELECT @kill = @kill + 'KILL ' + CONVERT(varchar(5), c.session_id) + ';'
@@ -640,7 +640,7 @@ ORDER BY c.connect_time ASC
 PRINT @kill
 
 EXEC(@kill)
- ```
+```
 </details>
 
 ## Server specific queries
@@ -649,52 +649,52 @@ EXEC(@kill)
  <summary>SQL Server Version & Edition info</summary>
 	
 ```sql
-	SELECT
-	CASE 
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '8%' THEN 'SQL2000'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '9%' THEN 'SQL2005'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.0%' THEN 'SQL2008'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.5%' THEN 'SQL2008 R2'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '11%' THEN 'SQL2012'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '12%' THEN 'SQL2014'
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '13%' THEN 'SQL2016'     
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '14%' THEN 'SQL2017' 
-		 WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '15%' THEN 'SQL2019' 
-		 ELSE 'unknown'
-	END AS MajorVersion,
-	SERVERPROPERTY('ProductLevel') AS ProductLevel,
-	SERVERPROPERTY('Edition') AS Edition,
-	SERVERPROPERTY('ProductVersion') AS ProductVersion
+SELECT
+CASE 
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '8%' THEN 'SQL2000'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '9%' THEN 'SQL2005'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.0%' THEN 'SQL2008'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '10.5%' THEN 'SQL2008 R2'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '11%' THEN 'SQL2012'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '12%' THEN 'SQL2014'
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '13%' THEN 'SQL2016'     
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '14%' THEN 'SQL2017' 
+		WHEN CONVERT(VARCHAR(128), SERVERPROPERTY ('productversion')) like '15%' THEN 'SQL2019' 
+		ELSE 'unknown'
+END AS MajorVersion,
+SERVERPROPERTY('ProductLevel') AS ProductLevel,
+SERVERPROPERTY('Edition') AS Edition,
+SERVERPROPERTY('ProductVersion') AS ProductVersion
 ```
 </details>
 
 <details>
  <summary>DBCC SQLPERF</summary>
  
- ```sql
- DBCC SQLPERF (LOGSPACE);
- ```
+```sql
+DBCC SQLPERF (LOGSPACE);
+```
  
- ```sql
+```sql
 DBCC SQLPERF("sys.dm_os_latch_stats" , CLEAR);
 DBCC SQLPERF("sys.dm_os_wait_stats" , CLEAR);
 GO
- ```
+```
 </details>
 
 <details>
  <summary>Total disk usage for server</summary>
  
- ```sql
- SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
- FROM master.sys.master_files
- ```
+```sql
+SELECT CONVERT(DECIMAL(10,2),(SUM(size * 8.00) / 1024.00 / 1024.00)) As UsedSpace
+FROM master.sys.master_files
+```
 </details>
 
 <details>
  <summary>Ola's IndexOptimize Script</summary>
  
- ```sql
+```sql
 EXECUTE dbo.IndexOptimize
 @Databases = 'USER_DATABASES',
 @FragmentationLow = NULL,
@@ -704,31 +704,31 @@ EXECUTE dbo.IndexOptimize
 @FragmentationLevel2 = 30,
 @UpdateStatistics = 'ALL',
 @OnlyModifiedStatistics = 'Y'
- ```
+```
  
- ```sql
+```sql
 EXECUTE dbo.IndexOptimize
 @Databases = 'USER_DATABASES',
 @FragmentationLow = NULL,
 @FragmentationMedium = NULL,
 @FragmentationHigh = NULL,
 @UpdateStatistics = 'ALL'
- ```
+```
 </details>
 
 <details>
  <summary>Ola's DatabaseIntegrityCheck Script</summary>
  
- ```sql
+```sql
 EXECUTE dbo.DatabaseIntegrityCheck
 @Databases = 'USER_DATABASES',
 @CheckCommands = 'CHECKDB'
- ```
+```
 </details>
 
 <details>
  <summary>Ola's DatabaseBackup Script</summary>
- 
+
 ```sql
 EXECUTE dbo.DatabaseBackup
 @Databases = 'USER_DATABASES',
@@ -781,34 +781,34 @@ EXECUTE dbo.DatabaseBackup
  <summary>Any rpc_completed event greater than 1 second - parsed from ring buffer</summary>
  
  ```sql
-  SELECT targetdata = CAST(xet.target_data AS xml)
-  INTO #capture_waits_data
+SELECT targetdata = CAST(xet.target_data AS xml)
+INTO #capture_waits_data
 FROM sys.dm_xe_database_session_targets AS xet
 JOIN sys.dm_xe_database_sessions AS xe
 ON (xe.address = xet.event_session_address)
 WHERE xe.name = 'QueryWaitTime_gt_1secs'
 AND xet.target_name = 'ring_buffer'
-  SELECT xed.event_data.value('(@timestamp)[1]', 'datetime2') AS [timestamp],
-  xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') AS cpu_time_ms,
-    floor(xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') / (1000000)) as seconds,
-  xed.event_data.value('(data[@name="logical_reads"]/value)[1]', 'int') AS logical_reads,
-  xed.event_data.value('(data[@name="row_count"]/value)[1]', 'int') AS row_count,
-  xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') AS wait_type_duration_ms,
-  floor(xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') / (1000000)) as seconds,
-  xed.event_data.value('(data[@name="result"]/text)[1]', 'varchar(max)') AS result,
-   xed.event_data.value('(data[@name="statement"]/value)[1]', 'varchar(max)') AS statement_text
+SELECT xed.event_data.value('(@timestamp)[1]', 'datetime2') AS [timestamp],
+xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') AS cpu_time_ms,
+	floor(xed.event_data.value('(data[@name="cpu_time"]/value)[1]', 'int') / (1000000)) as seconds,
+xed.event_data.value('(data[@name="logical_reads"]/value)[1]', 'int') AS logical_reads,
+xed.event_data.value('(data[@name="row_count"]/value)[1]', 'int') AS row_count,
+xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') AS wait_type_duration_ms,
+floor(xed.event_data.value('(data[@name="duration"]/value)[1]', 'int') / (1000000)) as seconds,
+xed.event_data.value('(data[@name="result"]/text)[1]', 'varchar(max)') AS result,
+xed.event_data.value('(data[@name="statement"]/value)[1]', 'varchar(max)') AS statement_text
 FROM #capture_waits_data
-  CROSS APPLY targetdata.nodes('//RingBufferTarget/event') AS xed (event_data)
-  ORDER BY wait_type_duration_ms DESC
-  DROP TABLE #capture_waits_data
-  GO
- ```
+CROSS APPLY targetdata.nodes('//RingBufferTarget/event') AS xed (event_data)
+ORDER BY wait_type_duration_ms DESC
+DROP TABLE #capture_waits_data
+GO
+```
 </details>
 
 <details>
  <summary>Create session - SP taking greater than 1 second</summary>
  
- ```sql
+```sql
 CREATE EVENT SESSION [<SPNAME>_gt_1secs] ON DATABASE 
 ADD EVENT sqlserver.rpc_completed(
     ACTION(sqlserver.client_app_name,sqlserver.client_hostname,sqlserver.num_response_rows,sqlserver.sql_text,sqlserver.username)
@@ -816,7 +816,7 @@ ADD EVENT sqlserver.rpc_completed(
 ADD TARGET package0.ring_buffer
 WITH (MAX_MEMORY=4096 KB,EVENT_RETENTION_MODE=ALLOW_SINGLE_EVENT_LOSS,MAX_DISPATCH_LATENCY=30 SECONDS,MAX_EVENT_SIZE=0 KB,MEMORY_PARTITION_MODE=NONE,TRACK_CAUSALITY=OFF,STARTUP_STATE=OFF)
 GO
- ```
+```
 </details>
 
 ## Azure SQL Single Database Only
@@ -824,7 +824,7 @@ GO
 <details>
  <summary>Tell me where it hurts (Azure SQL)</summary>
  
- ```sql
+```sql
 -- Isolate top waits for this database since last restart or failover (Query 24) (Top DB Waits)
 WITH [Waits]
 AS (SELECT wait_type, wait_time_ms/ 1000.0 AS [WaitS],
@@ -888,25 +888,25 @@ GROUP BY W1.RowNum
 HAVING SUM (W2.Percentage) - MAX (W1.Percentage) < 99 -- percentage threshold
 OPTION (RECOMPILE);
 ------
- ```
+```
 </details>
 
 <details>
  <summary>Clear proc cache (Azure SQL)</summary>
  
- ```sql
+```sql
 ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE ;  
- ```
+```
  
 ```sql
 ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE (0x0...);  
- ```
+```
 </details>
 
 <details>
  <summary>Generate Index rename scripts for auto generated indexes (Azure SQL)</summary>
  
- ```sql
+```sql
 declare @SchemaName varchar(100)declare @TableName varchar(256)
 declare @IndexName varchar(256)
 declare @ColumnName varchar(100)
@@ -1013,7 +1013,7 @@ BEGIN
   SET @TSQLScriptRenameIndex = 
 	  'IF  EXISTS (SELECT * FROM sys.indexes WHERE name=''' + @IndexName + ''' AND object_id = OBJECT_ID(''' + @SchemaName + '.' + @TableName + ''')) ' + CHAR(13) + CHAR(10)
 	  +'BEGIN' + CHAR(13) + CHAR(10)
-	  +'EXEC sp_rename N''' + @SchemaName + '.' + @TableName + '.' + + @IndexName + ''', N''IX_' + @IndexColumns 
+	  +'EXECUTE sp_rename N''' + @SchemaName + '.' + @TableName + '.' + + @IndexName + ''', N''IX_' + @IndexColumns 
 	  + case when len(@IncludedColumns)>0 then 
 			case when (SELECT count(value) FROM STRING_SPLIT(@IncludedColumns, '_')) < 5 then
 				'_Inc_' + @IncludedColumns 
@@ -1045,5 +1045,5 @@ END
 end
 close CursorIndex
 deallocate CursorIndex
- ```
+```
 </details>
