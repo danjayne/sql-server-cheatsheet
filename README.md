@@ -339,6 +339,41 @@ DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
 ```
 </details>
 
+
+<details>
+ <summary>Add Table and Column comments (~Azure SQL~)</summary>
+ 
+```sql
+declare @CurrentUser sysname
+select @CurrentUser = user_name()
+execute sp_addextendedproperty 'MS_Description', 
+   'This is my table comment',
+   'user', @CurrentUser, 'table', 'TABLE_1'
+go
+
+declare @CurrentUser sysname
+select @CurrentUser = user_name()
+execute sp_addextendedproperty 'MS_Description', 
+   'This is the primary key comment',
+   'user', @CurrentUser, 'table', 'TABLE_1', 'column', 'ID'
+go
+
+declare @CurrentUser sysname
+select @CurrentUser = user_name()
+execute sp_addextendedproperty 'MS_Description', 
+   'This is column one comment',
+   'user', @CurrentUser, 'table', 'TABLE_1', 'column', 'COLUMN_1'
+go
+
+declare @CurrentUser sysname
+select @CurrentUser = user_name()
+execute sp_addextendedproperty 'MS_Description', 
+   'This is column 2 comment',
+   'user', @CurrentUser, 'table', 'TABLE_1', 'column', 'COLUMN_2'
+go
+```
+</details>
+
 <details>
  <summary>Parameter list for Stored Procedure</summary>
  
