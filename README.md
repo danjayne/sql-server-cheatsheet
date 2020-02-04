@@ -320,14 +320,14 @@ ORDER BY ss.name, obj.name, sp.last_updated desc
 	<summary>Date statistics were last updated (alt)</summary>
 	
 ```sql
-	SELECT s.name AS Stats, o.name AS TableName, STATS_DATE(s.object_id, s.stats_id) AS LastStatsUpdate
-	FROM sys.stats s
-	JOIN sys.objects o ON s.object_id = o.object_id
-	WHERE
-		1 = 1
-		AND s.auto_created = 0 AND left(s.name,4)!='_WA_' -- Comment this out to just look at index stats
-		AND is_ms_shipped = 0 -- Comment this out to include system table stats
-	ORDER BY LastStatsUpdate
+SELECT s.name AS Stats, o.name AS TableName, STATS_DATE(s.object_id, s.stats_id) AS LastStatsUpdate
+FROM sys.stats s
+JOIN sys.objects o ON s.object_id = o.object_id
+WHERE
+	1 = 1
+	AND s.auto_created = 0 AND left(s.name,4)!='_WA_' -- Comment this out to just look at index stats
+	AND is_ms_shipped = 0 -- Comment this out to include system table stats
+ORDER BY LastStatsUpdate
 ```
 </details>
 
@@ -366,19 +366,19 @@ WHERE object_id = OBJECT_ID('dbo.TableName');
 <details>
  <summary>All missing dependancies</summary>
  
- ```sql
-	SELECT DISTINCT 'DROP PROCEDURE IF EXISTS ' +  OBJECT_SCHEMA_NAME(referencing_id) + '.' + 
-			OBJECT_NAME(referencing_id) AS [referencer],
-			referenced_entity_name AS [referenced]
-	FROM sys.sql_expression_dependencies
-	WHERE is_ambiguous = 0
-			AND OBJECT_ID(ISNULL(referenced_schema_name, 'dbo') + '.' + referenced_entity_name) IS NULL
-			AND OBJECT_ID(ISNULL(referenced_schema_name, OBJECT_SCHEMA_NAME(referencing_id)) + '.' + referenced_entity_name) IS NULL
-			AND referenced_entity_name NOT IN (SELECT Name FROM sys.types WHERE is_user_defined = 1) -- avoid type false positives
-			AND referenced_entity_name not in ('deleted', 'inserted') -- avoid trigger false positives
-			AND referenced_database_name is null
-	--ORDER BY OBJECT_NAME(referencing_id), referenced_entity_name
- ```
+```sql
+SELECT DISTINCT 'DROP PROCEDURE IF EXISTS ' +  OBJECT_SCHEMA_NAME(referencing_id) + '.' + 
+		OBJECT_NAME(referencing_id) AS [referencer],
+		referenced_entity_name AS [referenced]
+FROM sys.sql_expression_dependencies
+WHERE is_ambiguous = 0
+		AND OBJECT_ID(ISNULL(referenced_schema_name, 'dbo') + '.' + referenced_entity_name) IS NULL
+		AND OBJECT_ID(ISNULL(referenced_schema_name, OBJECT_SCHEMA_NAME(referencing_id)) + '.' + referenced_entity_name) IS NULL
+		AND referenced_entity_name NOT IN (SELECT Name FROM sys.types WHERE is_user_defined = 1) -- avoid type false positives
+		AND referenced_entity_name not in ('deleted', 'inserted') -- avoid trigger false positives
+		AND referenced_database_name is null
+--ORDER BY OBJECT_NAME(referencing_id), referenced_entity_name
+```
 </details>
 
 <details>
