@@ -52,36 +52,80 @@ SET STATISTICS IO, TIME OFF;
 ## Database specific queries
 
 <details>
+	<summary>Track progress of Index creation</summary>
+	
+```sql
+-- Index creation query must have SET STATISTICS PROFILE ON;
+-- Grab @SPID value from sp_WhoIsActive
+
+DECLARE @SPID INT = 51;
+
+;WITH agg AS
+(
+		 SELECT SUM(qp.[row_count]) AS [RowsProcessed],
+						SUM(qp.[estimate_row_count]) AS [TotalRows],
+						MAX(qp.last_active_time) - MIN(qp.first_active_time) AS [ElapsedMS],
+						MAX(IIF(qp.[close_time] = 0 AND qp.[first_row_time] > 0,
+										[physical_operator_name],
+										N'<Transition>')) AS [CurrentStep]
+		 FROM sys.dm_exec_query_profiles qp
+		 WHERE qp.[physical_operator_name] IN (N'Table Scan', N'Clustered Index Scan',
+																					 N'Index Scan',  N'Sort')
+		 AND   qp.[session_id] = @SPID
+), comp AS
+(
+		 SELECT *,
+						([TotalRows] - [RowsProcessed]) AS [RowsLeft],
+						([ElapsedMS] / 1000.0) AS [ElapsedSeconds]
+		 FROM   agg
+)
+SELECT [CurrentStep],
+			 [TotalRows],
+			 [RowsProcessed],
+			 [RowsLeft],
+			 CONVERT(DECIMAL(5, 2),
+							 (([RowsProcessed] * 1.0) / [TotalRows]) * 100) AS [PercentComplete],
+			 [ElapsedSeconds],
+			 (([ElapsedSeconds] / [RowsProcessed]) * [RowsLeft]) AS [EstimatedSecondsLeft],
+			 DATEADD(SECOND,
+							 (([ElapsedSeconds] / [RowsProcessed]) * [RowsLeft]),
+							 GETDATE()) AS [EstimatedCompletionTime]
+FROM   comp;
+
+```
+</details>
+
+<details>
  <summary>Table row counts & disk usage</summary>
- 
-  ```sql
-  SELECT 
-   t.NAME AS TableName,
-   i.name AS indexName,
-   SUM(p.rows) AS RowCounts,
-   SUM(a.total_pages) AS TotalPages, 
-   SUM(a.used_pages) AS UsedPages, 
-   SUM(a.data_pages) AS DataPages,
-   (SUM(a.total_pages) * 8) / 1024 AS TotalSpaceMB, 
-   (SUM(a.used_pages) * 8) / 1024 AS UsedSpaceMB, 
-   (SUM(a.data_pages) * 8) / 1024 AS DataSpaceMB
-  FROM 
-   sys.tables t
-  INNER JOIN  
-   sys.indexes i ON t.OBJECT_ID = i.object_id
-  INNER JOIN 
-   sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id
-  INNER JOIN 
-   sys.allocation_units a ON p.partition_id = a.container_id
-  WHERE 
-   t.NAME NOT LIKE 'dt%' AND
-   i.OBJECT_ID > 255 AND  
-   i.index_id <= 1
-  GROUP BY 
-   t.NAME, i.object_id, i.index_id, i.name 
-  ORDER BY 
-   OBJECT_NAME(i.object_id) 
-  ```
+
+```sql
+	SELECT 
+	 t.NAME AS TableName,
+	 i.name AS indexName,
+	 SUM(p.rows) AS RowCounts,
+	 SUM(a.total_pages) AS TotalPages, 
+	 SUM(a.used_pages) AS UsedPages, 
+	 SUM(a.data_pages) AS DataPages,
+	 (SUM(a.total_pages) * 8) / 1024 AS TotalSpaceMB, 
+	 (SUM(a.used_pages) * 8) / 1024 AS UsedSpaceMB, 
+	 (SUM(a.data_pages) * 8) / 1024 AS DataSpaceMB
+	FROM 
+	 sys.tables t
+	INNER JOIN  
+	 sys.indexes i ON t.OBJECT_ID = i.object_id
+	INNER JOIN 
+	 sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id
+	INNER JOIN 
+	 sys.allocation_units a ON p.partition_id = a.container_id
+	WHERE 
+	 t.NAME NOT LIKE 'dt%' AND
+	 i.OBJECT_ID > 255 AND  
+	 i.index_id <= 1
+	GROUP BY 
+	 t.NAME, i.object_id, i.index_id, i.name 
+	ORDER BY 
+	 OBJECT_NAME(i.object_id) 
+```
 </details>
 
 <details>
