@@ -370,7 +370,7 @@ StartTime DESC;
 ```
 </details>
 
-<detail>
+<details>
 	<summary>List all foreign keys</summary>
 
 ```sql
@@ -409,7 +409,7 @@ order by table_schema_name,
 ```
 </details>
 
-<detail>
+<details>
 	<summary>List all table column definitions</summary>
 
 ```sql
