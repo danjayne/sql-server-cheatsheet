@@ -294,6 +294,30 @@ FROM   comp;
 
 <details>
 	<summary>Date statistics were last updated</summary>
+
+```sql
+SELECT ss.name AS SchemaName
+, obj.name AS TableName
+, sp.last_updated
+, stat.stats_id
+, stat.name AS StatiscticsName
+, stat.filter_definition
+, sp.[rows]
+, sp.rows_sampled
+, sp.steps
+, sp.unfiltered_rows
+, sp.modification_counter
+FROM sys.objects AS obj
+INNER JOIN sys.schemas ss ON obj.schema_id = ss.schema_id
+INNER JOIN sys.stats stat ON stat.object_id = obj.object_id
+CROSS APPLY sys.dm_db_stats_properties(stat.object_id, stat.stats_id) AS sp
+WHERE obj.is_ms_shipped = 0
+ORDER BY ss.name, obj.name, sp.last_updated desc
+```
+</details>
+
+<details>
+	<summary>Date statistics were last updated (alt)</summary>
 	
 ```sql
 	SELECT s.name AS Stats, o.name AS TableName, STATS_DATE(s.object_id, s.stats_id) AS LastStatsUpdate
