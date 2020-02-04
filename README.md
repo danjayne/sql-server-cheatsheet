@@ -339,7 +339,7 @@ DBCC SHOW_STATISTICS('dbo.TableName', 'PK_TableName_Id');
 ```
 </details>
 
-<detail>
+<details>
 	<summary>Autogrowth for Server</summary>
 
 ```sql
