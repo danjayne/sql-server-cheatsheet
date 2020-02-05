@@ -1298,3 +1298,36 @@ close CursorIndex
 deallocate CursorIndex
 ```
 </details>
+
+## SQL Server on Linux in Docker Containers
+
+<details>
+ <summary>Run SQL Server 2017 in Docker</summary>
+ 
+```Dockerfile
+docker stop sql-server-2017-local-dev
+docker rm sql-server-2017-local-dev
+
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=<Pass>" -p <Port>:1433 --name sql-server-2017-local-dev -d mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
+pause
+```
+</details>
+
+<details>
+ <summary>Run SQL Server 2019 in Docker</summary>
+ 
+Create the following directories for this example:
+ - D:/SQLServer2019-Linux/data
+ - D:/SQLServer2019-Linux/logs
+ - D:/SQLServer2019-Linux/secrets
+
+```Dockerfile
+docker stop sql-server-2019-local-dev
+docker rm sql-server-2019-local-dev
+
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<YourPass>" --name sql-server-2019-local-dev -p <Port>:1433 -v D:/SQLServer2019-Linux/data:/var/opt/mssql/data -v D:/SQLServer2019-Linux/logs:/var/opt/mssql/log -v D:/SQLServer2019-Linux/secrets:/var/opt/mssql/secrets -d mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
+
+pause
+```
+</details>
+
