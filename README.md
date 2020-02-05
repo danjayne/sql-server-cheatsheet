@@ -34,6 +34,7 @@ Useful SQL Server scripts and snippets
 * [SentryOne Blog](https://www.sentryone.com/blog)
 * [Useful T-SQL queries and scripts](https://www.sqlservercentral.com/blogs/useful-t-sql-queries-and-scripts-to-work-in-sql-server)
 * [Reddit - "A big list of sql server queries and commands"](https://www.reddit.com/r/learnprogramming/comments/7fm6k6/sql_a_big_list_of_sql_server_queries_and_commands/)
+* [Slow in the Application, Fast in SSMS? Understanding Performance Mysteries](http://www.sommarskog.se/query-plan-mysteries.html)
 * [...More blogs](https://www.sqlshack.com/sql-server-blogs/)
 
 ## Snippets
